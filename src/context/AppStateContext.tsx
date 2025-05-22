@@ -31,8 +31,7 @@ const AppStateContext = createContext<AppState | undefined>(undefined);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
-  // TEMPORARY: Initialize with mock student details for direct voting page access
-  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>({ studentId: 'devDefault', name: 'Dev Student' });
+  const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null); // Reverted: Initialize as null
   const [electionName, setElectionName] = useState<string | null>("CampusVote General Election");
   const [defaultSessionStartTime, setDefaultSessionStartTime] = useState<string | null>("09:00");
   const [defaultSessionEndTime, setDefaultSessionEndTime] = useState<string | null>("17:00");
@@ -40,10 +39,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setRole(null);
-    // TEMPORARY: Reset to mock student details on logout if direct access is still desired,
-    // or set to null to restore normal flow that requires verification.
-    // For now, keeping it mock for continuous direct access during this dev phase.
-    setStudentDetails({ studentId: 'devDefault', name: 'Dev Student' });
+    setStudentDetails(null); // Reverted: Set to null on logout
     // Election name, default times, and theme persist client-side for the session
   };
 
