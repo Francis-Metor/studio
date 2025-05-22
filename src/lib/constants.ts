@@ -14,8 +14,8 @@ export const ROUTES = {
   ADMIN_CANDIDATES: '/admin/candidates',
   ADMIN_STUDENTS: '/admin/students',
   ADMIN_SESSIONS: '/admin/sessions',
-  ADMIN_STATISTICS: '/admin/statistics', // Added new route
+  ADMIN_STATISTICS: '/admin/statistics',
+  ADMIN_SETTINGS: '/admin/settings', // Added new route
   STUDENT_VERIFY: '/student/verify',
   STUDENT_VOTE: '/student/vote',
 } as const;
-

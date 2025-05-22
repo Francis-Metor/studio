@@ -68,15 +68,15 @@ export default function AdminDashboardPage() {
       title: "View Statistics", 
       description: "Analyze voting results and participation.",
       href: ROUTES.ADMIN_STATISTICS, 
-      icon: BarChart3, // Updated icon
+      icon: BarChart3, 
       comingSoon: false 
     },
     { 
       title: "Settings", 
       description: "Configure application settings.",
-      href: "#", // Placeholder
+      href: ROUTES.ADMIN_SETTINGS, // Updated href
       icon: Settings,
-      comingSoon: true
+      comingSoon: false // Updated comingSoon status
     },
   ];
 
@@ -110,4 +110,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
