@@ -1,42 +1,98 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ArrowLeft, PieChart, TrendingUp, ListChecks, Percent, SkipForward } from "lucide-react";
+import { BarChart3, ArrowLeft, PieChart, TrendingUp, ListChecks, Percent, ArchiveIcon } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { useAppState } from '@/context/AppStateContext';
-import votingCategoriesData from '@/lib/voting-data.json';
-import studentsData from '@/lib/students-data.json';
-import type { VotingCategory, Student } from '@/lib/types';
+import currentVotingCategoriesData from '@/lib/voting-data.json'; // Current election structure
+import allStudentsData from '@/lib/students-data.json';
+import archivedElectionResultsData from '@/lib/archived-election-results.json'; // Past election results
+import type { VotingCategory, Student, ArchivedElection, DisplayedStatistic, CandidateInVotingData } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
+
+const LIVE_DATA_SOURCE_ID = "live_current_election";
 
 export default function AdminStatisticsPage() {
-  const { voteCounts, totalVotesCasted, skipCountsByCategory, electionName } = useAppState(); // Added electionName
-  const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
-  const allStudents: Student[] = studentsData as Student[];
+  const appState = useAppState();
+  const { 
+    voteCounts: liveVoteCounts, 
+    skipCountsByCategory: liveSkipCountsByCategory, 
+    electionName: liveElectionName,
+    totalVotesCasted: liveTotalVotesCasted
+  } = appState;
 
-  const [totalEligibleStudents, setTotalEligibleStudents] = useState(0);
-  const [turnoutPercentage, setTurnoutPercentage] = useState(0);
+  const currentCategories: VotingCategory[] = currentVotingCategoriesData as VotingCategory[];
+  const allStudents: Student[] = allStudentsData as Student[];
+  const archivedElections: ArchivedElection[] = archivedElectionResultsData as ArchivedElection[];
+
+  const [selectedDataSourceId, setSelectedDataSourceId] = useState<string>(LIVE_DATA_SOURCE_ID);
+  const [displayedStats, setDisplayedStats] = useState<DisplayedStatistic | null>(null);
 
   useEffect(() => {
-    const eligible = allStudents.filter(student => student.status === 'Eligible').length;
-    setTotalEligibleStudents(eligible);
-  }, [allStudents]);
+    let newDisplayedStats: DisplayedStatistic;
 
-  useEffect(() => {
-    if (totalEligibleStudents > 0) {
-      // Turnout is based on students who cast at least one valid vote for a candidate
-      const percentage = (totalVotesCasted / totalEligibleStudents) * 100;
-      setTurnoutPercentage(parseFloat(percentage.toFixed(1)));
+    if (selectedDataSourceId === LIVE_DATA_SOURCE_ID) {
+      const eligible = allStudents.filter(student => student.status === 'Eligible').length;
+      const turnout = eligible > 0 ? parseFloat(((liveTotalVotesCasted / eligible) * 100).toFixed(1)) : 0;
+      
+      newDisplayedStats = {
+        electionName: liveElectionName || "Live Election",
+        totalVotesCasted: liveTotalVotesCasted,
+        totalEligibleStudents: eligible,
+        turnoutPercentage: turnout,
+        voteCounts: liveVoteCounts,
+        skipCountsByCategory: liveSkipCountsByCategory,
+        categoriesToDisplay: currentCategories.map(cat => ({ // Ensure structure matches VotingCategory
+            id: cat.id,
+            name: cat.name,
+            candidates: cat.candidates.map(c => ({id: c.id, name: c.name, photoUrl: c.photoUrl, photoHint: c.photoHint}))
+        }))
+      };
     } else {
-      setTurnoutPercentage(0);
+      const selectedArchive = archivedElections.find(archive => archive.id === selectedDataSourceId);
+      if (selectedArchive) {
+        newDisplayedStats = {
+          electionName: selectedArchive.name,
+          totalVotesCasted: selectedArchive.totalVotesCasted,
+          totalEligibleStudents: selectedArchive.totalEligibleStudents,
+          turnoutPercentage: selectedArchive.turnoutPercentage,
+          voteCounts: selectedArchive.voteCounts,
+          skipCountsByCategory: selectedArchive.skipCountsByCategory,
+          categoriesToDisplay: selectedArchive.electionSetup.map(cat => ({ // Map to VotingCategory structure
+            id: cat.id,
+            name: cat.name,
+            candidates: cat.candidates.map(c => ({id: c.id, name: c.name, photoUrl: c.photoUrl, photoHint: c.photoHint}))
+          }))
+        };
+      } else {
+        // Fallback to live if archive not found (should not happen with dropdown)
+        const eligible = allStudents.filter(student => student.status === 'Eligible').length;
+        const turnout = eligible > 0 ? parseFloat(((liveTotalVotesCasted / eligible) * 100).toFixed(1)) : 0;
+        newDisplayedStats = {
+          electionName: liveElectionName || "Live Election (Error Fallback)",
+          totalVotesCasted: liveTotalVotesCasted,
+          totalEligibleStudents: eligible,
+          turnoutPercentage: turnout,
+          voteCounts: liveVoteCounts,
+          skipCountsByCategory: liveSkipCountsByCategory,
+          categoriesToDisplay: currentCategories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            candidates: cat.candidates.map(c => ({id: c.id, name: c.name, photoUrl: c.photoUrl, photoHint: c.photoHint}))
+          }))
+        };
+      }
     }
-  }, [totalVotesCasted, totalEligibleStudents]);
+    setDisplayedStats(newDisplayedStats);
+  }, [selectedDataSourceId, liveVoteCounts, liveSkipCountsByCategory, liveElectionName, liveTotalVotesCasted, allStudents, archivedElections, currentCategories]);
 
 
-  const otherStats = [
+  const otherStatsPlaceholder = [
     {
       title: "Participation by Department",
       value: "N/A",
@@ -45,14 +101,66 @@ export default function AdminStatisticsPage() {
     },
   ];
 
+  if (!displayedStats) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold flex items-center">
+            <BarChart3 className="mr-3 text-primary" size={32} />
+            Voting Statistics
+          </h1>
+           <Button variant="outline" asChild>
+            <Link href={ROUTES.ADMIN_DASHBOARD}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+        <p>Loading statistics...</p>
+      </div>
+    );
+  }
+  
+  const { 
+    electionName: currentElectionName, 
+    totalVotesCasted: currentTotalVotesCasted,
+    totalEligibleStudents: currentTotalEligibleStudents,
+    turnoutPercentage: currentTurnoutPercentage,
+    voteCounts: currentVoteCounts,
+    skipCountsByCategory: currentSkipCountsByCategory,
+    categoriesToDisplay: currentCategoriesToDisplay
+  } = displayedStats;
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h1 className="text-3xl font-bold flex items-center">
           <BarChart3 className="mr-3 text-primary" size={32} />
           Voting Statistics
         </h1>
-        <Button variant="outline" asChild>
+        <div className="flex items-center gap-2">
+            <Label htmlFor="dataSourceSelect" className="text-sm shrink-0">View Results For:</Label>
+            <Select value={selectedDataSourceId} onValueChange={setSelectedDataSourceId}>
+              <SelectTrigger id="dataSourceSelect" className="w-full sm:w-[280px]">
+                <SelectValue placeholder="Select data source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={LIVE_DATA_SOURCE_ID}>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-500" /> Live Current Election
+                  </div>
+                </SelectItem>
+                {archivedElections.map(archive => (
+                  <SelectItem key={archive.id} value={archive.id}>
+                    <div className="flex items-center gap-2">
+                      <ArchiveIcon className="h-4 w-4 text-blue-500" /> {archive.name} (Ended: {archive.endDate})
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+        </div>
+        <Button variant="outline" asChild className="w-full sm:w-auto">
           <Link href={ROUTES.ADMIN_DASHBOARD}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
@@ -64,9 +172,13 @@ export default function AdminStatisticsPage() {
         <CardHeader>
           <CardTitle>
             Election Performance Overview
-            {electionName && <span className="block text-lg font-normal text-muted-foreground mt-1">For: {electionName}</span>}
+            {currentElectionName && <span className="block text-lg font-normal text-muted-foreground mt-1">For: {currentElectionName}</span>}
           </CardTitle>
-          <CardDescription>Key metrics from the voting process. Vote counts are updated in real-time for the current event.</CardDescription>
+          <CardDescription>
+            {selectedDataSourceId === LIVE_DATA_SOURCE_ID 
+              ? "Key metrics from the current voting process. Vote counts are updated in real-time."
+              : "Archived metrics from this past election."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
            <div className="grid md:grid-cols-2 gap-6">
@@ -76,7 +188,7 @@ export default function AdminStatisticsPage() {
                 <TrendingUp className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-primary">{totalVotesCasted}</div>
+                <div className="text-3xl font-bold text-primary">{currentTotalVotesCasted}</div>
                 <p className="text-xs text-muted-foreground pt-1">Total number of valid votes for candidates across all categories.</p>
               </CardContent>
             </Card>
@@ -87,8 +199,8 @@ export default function AdminStatisticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-primary">
-                  {totalVotesCasted} / {totalEligibleStudents} 
-                  <span className="text-2xl ml-1">({turnoutPercentage}%)</span>
+                  {currentTotalVotesCasted} / {currentTotalEligibleStudents} 
+                  <span className="text-2xl ml-1">({currentTurnoutPercentage}%)</span>
                 </div>
                 <p className="text-xs text-muted-foreground pt-1">Percentage of eligible students who cast at least one valid vote.</p>
               </CardContent>
@@ -98,7 +210,7 @@ export default function AdminStatisticsPage() {
       </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {otherStats.map((stat) => (
+        {otherStatsPlaceholder.map((stat) => (
           <Card key={stat.title} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-medium">{stat.title}</CardTitle>
@@ -118,13 +230,18 @@ export default function AdminStatisticsPage() {
             <ListChecks className="mr-2 text-primary" />
             Results by Category
           </CardTitle>
-          <CardDescription>Live vote counts per candidate and skipped votes within each category for the current event.</CardDescription>
+          <CardDescription>
+            {selectedDataSourceId === LIVE_DATA_SOURCE_ID 
+              ? "Live vote counts per candidate and skipped votes within each category."
+              : "Archived vote counts per candidate and skipped votes for this election."}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {categories.length === 0 && <p className="text-muted-foreground">No voting categories found.</p>}
-          {categories.map((category) => {
-            const categoryCandidateVotes = category.candidates.reduce((sum, candidate) => sum + (voteCounts[candidate.id] || 0), 0);
-            const categorySkippedVotes = skipCountsByCategory[category.id] || 0;
+          {currentCategoriesToDisplay.length === 0 && <p className="text-muted-foreground">No voting categories found for this election.</p>}
+          {currentCategoriesToDisplay.map((category) => {
+            // Calculate total candidate votes for this specific category from currentVoteCounts
+            const categoryCandidateVotes = category.candidates.reduce((sum, candidate) => sum + (currentVoteCounts[candidate.id] || 0), 0);
+            const categorySkippedVotes = currentSkipCountsByCategory[category.id] || 0;
 
             return (
               <Card key={category.id} className="shadow-sm">
@@ -136,7 +253,7 @@ export default function AdminStatisticsPage() {
                   {category.candidates.length === 0 && <p className="text-sm text-muted-foreground">No candidates in this category.</p>}
                   <ul className="space-y-2">
                     {category.candidates.map((candidate) => {
-                      const count = voteCounts[candidate.id] || 0;
+                      const count = currentVoteCounts[candidate.id] || 0;
                       const percentage = categoryCandidateVotes > 0 ? ((count / categoryCandidateVotes) * 100).toFixed(1) : "0.0";
                       return (
                         <li key={candidate.id} className="flex justify-between items-center p-2 border-b last:border-b-0">
@@ -166,4 +283,3 @@ export default function AdminStatisticsPage() {
     </div>
   );
 }
-

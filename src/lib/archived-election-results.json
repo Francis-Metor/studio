@@ -1,0 +1,64 @@
+
+[
+  {
+    "id": "spring_2023_general_election",
+    "name": "Spring General Election 2023",
+    "endDate": "2023-03-15",
+    "totalVotesCasted": 125,
+    "totalEligibleStudents": 180,
+    "turnoutPercentage": 69.4,
+    "voteCounts": {
+      "p1_2023": 70,
+      "p2_2023": 50,
+      "s1_2023": 80,
+      "s2_2023": 40
+    },
+    "skipCountsByCategory": {
+      "president_2023": 5,
+      "secretary_2023": 10
+    },
+    "electionSetup": [
+      {
+        "id": "president_2023",
+        "name": "President (Spring 2023)",
+        "candidates": [
+          { "id": "p1_2023", "name": "Eleanor Vance", "photoUrl": "https://placehold.co/150x150.png", "photoHint": "leader" },
+          { "id": "p2_2023", "name": "Marcus Chen", "photoUrl": "https://placehold.co/150x150.png", "photoHint": "innovator" }
+        ]
+      },
+      {
+        "id": "secretary_2023",
+        "name": "Secretary (Spring 2023)",
+        "candidates": [
+          { "id": "s1_2023", "name": "Olivia Rodriguez", "photoUrl": "https://placehold.co/150x150.png", "photoHint": "organized person" },
+          { "id": "s2_2023", "name": "James Kim", "photoUrl": "https://placehold.co/150x150.png", "photoHint": "communicator" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fall_2023_referendum",
+    "name": "Fall Referendum 2023",
+    "endDate": "2023-10-20",
+    "totalVotesCasted": 90,
+    "totalEligibleStudents": 150,
+    "turnoutPercentage": 60.0,
+    "voteCounts": {
+      "ref_opt1_2023": 50,
+      "ref_opt2_2023": 35
+    },
+    "skipCountsByCategory": {
+      "referendum_q1_2023": 5
+    },
+    "electionSetup": [
+      {
+        "id": "referendum_q1_2023",
+        "name": "Referendum Question 1 (Fall 2023)",
+        "candidates": [
+          { "id": "ref_opt1_2023", "name": "Option Alpha (Yes)" },
+          { "id": "ref_opt2_2023", "name": "Option Beta (No)" }
+        ]
+      }
+    ]
+  }
+]
