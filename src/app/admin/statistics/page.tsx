@@ -1,32 +1,48 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ArrowLeft, PieChart, Users, TrendingUp, ListChecks } from "lucide-react";
+import { BarChart3, ArrowLeft, PieChart, Users, TrendingUp, ListChecks, Percent } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { useAppState } from '@/context/AppStateContext';
 import votingCategoriesData from '@/lib/voting-data.json';
-import type { VotingCategory } from '@/lib/types';
+import studentsData from '@/lib/students-data.json'; // Import student data
+import type { VotingCategory, Student } from '@/lib/types';
 
 export default function AdminStatisticsPage() {
   const { voteCounts, totalVotesCasted } = useAppState();
   const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
+  const allStudents: Student[] = studentsData as Student[];
 
-  const placeholderStats = [
-    {
-      title: "Overall Turnout",
-      value: "N/A",
-      description: "Calculation not yet implemented.",
-      icon: Users,
-    },
+  const [totalEligibleStudents, setTotalEligibleStudents] = useState(0);
+  const [turnoutPercentage, setTurnoutPercentage] = useState(0);
+
+  useEffect(() => {
+    const eligible = allStudents.filter(student => student.status === 'Eligible').length;
+    setTotalEligibleStudents(eligible);
+  }, [allStudents]);
+
+  useEffect(() => {
+    if (totalEligibleStudents > 0) {
+      const percentage = (totalVotesCasted / totalEligibleStudents) * 100;
+      setTurnoutPercentage(parseFloat(percentage.toFixed(1)));
+    } else {
+      setTurnoutPercentage(0);
+    }
+  }, [totalVotesCasted, totalEligibleStudents]);
+
+
+  const otherStats = [
     {
       title: "Participation by Department",
       value: "N/A",
-      description: "Data not available for this metric.",
+      description: "Student department data not available.",
       icon: PieChart,
     },
+    // Add more placeholder stats if needed
   ];
 
   return (
@@ -50,21 +66,36 @@ export default function AdminStatisticsPage() {
           <CardDescription>Key metrics from the voting process. Vote counts are updated in real-time for the current session.</CardDescription>
         </CardHeader>
         <CardContent>
-           <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">Total Votes Cast</CardTitle>
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">{totalVotesCasted}</div>
-              <p className="text-xs text-muted-foreground pt-1">Total number of votes recorded across all categories in this session.</p>
-            </CardContent>
-          </Card>
+           <div className="grid md:grid-cols-2 gap-6">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-lg font-medium">Total Votes Cast</CardTitle>
+                <TrendingUp className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary">{totalVotesCasted}</div>
+                <p className="text-xs text-muted-foreground pt-1">Total number of votes recorded across all categories.</p>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-lg font-medium">Overall Turnout</CardTitle>
+                <Percent className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary">
+                  {totalVotesCasted} / {totalEligibleStudents} 
+                  <span className="text-2xl ml-1">({turnoutPercentage}%)</span>
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">Percentage of eligible students who have voted.</p>
+              </CardContent>
+            </Card>
+          </div>
         </CardContent>
       </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {placeholderStats.map((stat) => (
+        {otherStats.map((stat) => (
           <Card key={stat.title} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg font-medium">{stat.title}</CardTitle>
