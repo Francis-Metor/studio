@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { LayoutDashboard, ListTree, UsersRound, ClipboardList, Timer, Settings } from "lucide-react";
+import { LayoutDashboard, ListTree, UsersRound, ClipboardList, Timer, Settings, BarChart3d } from "lucide-react"; // Changed icon for stats
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
@@ -67,9 +67,9 @@ export default function AdminDashboardPage() {
     { 
       title: "View Statistics", 
       description: "Analyze voting results and participation.",
-      href: "#", // Placeholder, can be updated later
-      icon: LayoutDashboard, // Using LayoutDashboard for general stats, can be BarChart or PieChart
-      comingSoon: true
+      href: ROUTES.ADMIN_STATISTICS, // Updated href
+      icon: BarChart3d, // Updated icon
+      comingSoon: false // Enabled the card
     },
     { 
       title: "Settings", 
@@ -110,3 +110,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
