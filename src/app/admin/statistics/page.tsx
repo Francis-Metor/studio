@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ArrowLeft, PieChart, Users, TrendingUp, ListChecks, Percent, SkipForward } from "lucide-react"; // Added SkipForward
+import { BarChart3, ArrowLeft, PieChart, TrendingUp, ListChecks, Percent, SkipForward } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { useAppState } from '@/context/AppStateContext';
@@ -13,7 +13,7 @@ import studentsData from '@/lib/students-data.json';
 import type { VotingCategory, Student } from '@/lib/types';
 
 export default function AdminStatisticsPage() {
-  const { voteCounts, totalVotesCasted, skipCountsByCategory } = useAppState(); // Added skipCountsByCategory
+  const { voteCounts, totalVotesCasted, skipCountsByCategory, electionName } = useAppState(); // Added electionName
   const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
   const allStudents: Student[] = studentsData as Student[];
 
@@ -40,7 +40,7 @@ export default function AdminStatisticsPage() {
     {
       title: "Participation by Department",
       value: "N/A",
-      description: "Student department data not available.",
+      description: "Student department data not available for current setup.",
       icon: PieChart,
     },
   ];
@@ -62,8 +62,11 @@ export default function AdminStatisticsPage() {
       
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>Election Performance Overview</CardTitle>
-          <CardDescription>Key metrics from the voting process. Vote counts are updated in real-time for the current session.</CardDescription>
+          <CardTitle>
+            Election Performance Overview
+            {electionName && <span className="block text-lg font-normal text-muted-foreground mt-1">For: {electionName}</span>}
+          </CardTitle>
+          <CardDescription>Key metrics from the voting process. Vote counts are updated in real-time for the current event.</CardDescription>
         </CardHeader>
         <CardContent>
            <div className="grid md:grid-cols-2 gap-6">
@@ -115,15 +118,13 @@ export default function AdminStatisticsPage() {
             <ListChecks className="mr-2 text-primary" />
             Results by Category
           </CardTitle>
-          <CardDescription>Live vote counts per candidate and skipped votes within each category for the current session.</CardDescription>
+          <CardDescription>Live vote counts per candidate and skipped votes within each category for the current event.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {categories.length === 0 && <p className="text-muted-foreground">No voting categories found.</p>}
           {categories.map((category) => {
             const categoryCandidateVotes = category.candidates.reduce((sum, candidate) => sum + (voteCounts[candidate.id] || 0), 0);
             const categorySkippedVotes = skipCountsByCategory[category.id] || 0;
-            // Total participations in this category (votes for candidates + skips)
-            // const categoryTotalParticipations = categoryCandidateVotes + categorySkippedVotes;
 
             return (
               <Card key={category.id} className="shadow-sm">
@@ -165,3 +166,4 @@ export default function AdminStatisticsPage() {
     </div>
   );
 }
+
