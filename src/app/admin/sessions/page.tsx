@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label"; // Added missing import
 import { Timer, ArrowLeft, PlayCircle, PauseCircle, StopCircle, PlusCircle, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
