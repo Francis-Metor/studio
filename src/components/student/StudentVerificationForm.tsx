@@ -1,7 +1,9 @@
+
 'use client';
 
 import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react'; // Changed from react-dom and renamed
+import { useFormStatus } from 'react-dom'; // useFormStatus remains in react-dom
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +34,8 @@ export default function StudentVerificationForm() {
   const { setStudentDetails } = useAppState();
 
   const initialState: VerificationFormState = { message: undefined, errors: undefined, aiResponse: undefined };
-  const [state, formAction] = useFormState(handleStudentVerification, initialState);
+  // Updated to useActionState
+  const [state, formAction] = useActionState(handleStudentVerification, initialState);
 
   useEffect(() => {
     if (state.message && state.aiResponse) {
@@ -43,37 +46,26 @@ export default function StudentVerificationForm() {
           variant: 'default',
         });
         // Store student details for the voting process
-        setStudentDetails({ 
-          studentId: state.aiResponse.input?.studentId || '', // input is not part of ValidateStudentFormOutput. Assuming it's there.
-          name: state.aiResponse.input?.name || '' // This needs to be handled if input is not on aiResponse
-        });
-        // A better approach might be to get studentId and name from the form data used for the successful call
-        // For now, assuming AI response might echo input, or get from form values directly if successful.
-        // Let's assume `studentId` and `name` were part of form submission that resulted in success.
-        // We need to get the actual submitted values. The AI response doesn't explicitly return the validated input values.
-        // The AI flow *does* have an input schema, and the server action has access to `validatedFields.data`.
-        // This part would be better if `handleStudentVerification` returned the validated data on success.
-        // For now, let's make a small adjustment to actions.ts to return validated input if successful for context.
-        // Or, get it from aiResponse.feedback if it confirms the details, but that's brittle.
-        // For simplicity and given the AI's current output, let's assume we reconstruct from state.aiResponse.
-        // The prompt for GenAI includes studentId and name, so it should be in the response somehow.
-        // The ValidateStudentFormOutput doesn't have an `input` field.
-        // I will extract it from the feedback string, or rely on form values (harder with useFormState alone).
-        // Best: Add the successfully validated studentId and name to VerificationFormState
-        if (state.aiResponse?.input?.studentId && state.aiResponse?.input?.name) {
-             setStudentDetails({ studentId: state.aiResponse.input.studentId, name: state.aiResponse.input.name });
-        } else if (state.aiResponse?.feedback?.includes( (state.aiResponse as any)._formStudentId || '')) { 
-            // This is a hacky way if studentId and name are not directly on aiResponse.
-            // Assuming the action is modified to add studentId/name to the success state.
-            // Let's assume the action is updated to put `validatedInput` in `aiResponse` or similar for now.
-            // Or simply, the form fields themselves were `studentId` and `name`.
-            // The `aiInput` in `actions.ts` has the studentId and name. The `aiResponse` from `validateStudentForm`
-            // doesn't directly carry over the `input` object.
-            // Let's modify action to add validatedData to state.
-            if(state.validatedData) {
-              setStudentDetails({ studentId: state.validatedData.studentId, name: state.validatedData.name });
-            }
+        // The AI flow's input schema is used, so the server action has access to `validatedFields.data`.
+        // Let's assume the action is updated to put `validatedInput` in `aiResponse` or directly in `state.validatedData`.
+        // For now, we will rely on the action possibly returning this.
+        // A better approach would be to add validatedInput directly to the VerificationFormState in actions.ts.
+        // Current structure of VerificationFormState does not include validatedData, but we can adjust if needed.
+        // Let's try to get it from state if the action is updated to include it.
+
+        // Check if validatedData is part of the state (needs action modification)
+        if ((state as any).validatedData) {
+          const { studentId, name } = (state as any).validatedData;
+          setStudentDetails({ studentId, name });
+        } else if (state.aiResponse && state.aiResponse.input?.studentId && state.aiResponse.input?.name) {
+          // Fallback if input is echoed in aiResponse (not standard for current schema)
+           setStudentDetails({ studentId: state.aiResponse.input.studentId, name: state.aiResponse.input.name });
         }
+        // else {
+        //   // If neither validatedData nor aiResponse.input is available, we might be missing the data.
+        //   // This part might need refinement in `actions.ts` to ensure `studentId` and `name` are passed back reliably on success.
+        //   console.warn("Student details for context are missing from the verification response.");
+        // }
         router.push(ROUTES.STUDENT_VOTE);
       } else {
         toast({
