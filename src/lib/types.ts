@@ -4,16 +4,20 @@ export type Candidate = {
   name: string;
   photoUrl?: string;
   photoHint?: string; // For data-ai-hint
-  categoryId?: string; // To link candidate to a category
+  categoryId: string; // Made mandatory for candidates when managed in a flat list
 };
+
+// This type represents how candidates are structured within voting-data.json,
+// where categoryId is implicit from the parent VotingCategory.
+export type CandidateInVotingData = Omit<Candidate, 'categoryId'>;
 
 export type VotingCategory = {
   id: string;
   name: string;
-  candidates: Candidate[];
+  candidates: CandidateInVotingData[];
 };
 
-// Simplified Category type for admin management
+// Simplified Category type for admin management and dropdowns
 export type Category = {
   id: string;
   name: string;
@@ -38,3 +42,8 @@ export type VotingSession = {
   endDate: string; // ISO string date
   status: 'Pending' | 'Active' | 'Paused' | 'Closed';
 };
+
+// Helper type for displaying candidate with category name in the table
+export interface DisplayCandidate extends Candidate {
+  categoryName?: string;
+}
