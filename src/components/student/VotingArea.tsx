@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,9 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, Send, UserCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Send, UserCircle2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { votingCategoriesData } from '@/lib/data';
+import votingCategoriesData from '@/lib/voting-data.json'; // Updated import
 import type { VoteSelection, VotingCategory, Candidate } from '@/lib/types';
 import { ROUTES } from '@/lib/constants';
 import { useAppState } from '@/context/AppStateContext';
@@ -26,16 +27,16 @@ export default function VotingArea() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Cast the imported JSON data to the correct type
+  const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
+
   useEffect(() => {
-    // If not student details (not verified), redirect to verification
-    // This is a basic auth check for the page
     if (!studentDetails?.studentId) {
       toast({ title: "Verification Required", description: "Please verify your student details first.", variant: "destructive" });
       router.push(ROUTES.STUDENT_VERIFY);
     }
   }, [studentDetails, router, toast]);
 
-  const categories = votingCategoriesData;
   const currentCategory = categories[currentCategoryIndex];
   const totalCategories = categories.length;
 
@@ -74,14 +75,13 @@ export default function VotingArea() {
       toast({
         title: 'Votes Submitted Successfully!',
         description: 'Thank you for participating.',
-        className: 'bg-green-500 text-white', // Custom success toast styling
+        className: 'bg-green-500 text-white', 
       });
-      // Reset state for next voter
       setSelections({});
       setCurrentCategoryIndex(0);
       setIsConfirming(false);
-      logout(); // Clear student session
-      router.push(ROUTES.STUDENT_VERIFY); // Or a thank you page then redirect
+      logout(); 
+      router.push(ROUTES.STUDENT_VERIFY); 
     }, 1500);
   };
 
