@@ -1,0 +1,8 @@
+
+[
+  { "id": "S1001", "name": "Alice Johnson", "status": "Eligible" },
+  { "id": "S1002", "name": "Bob Williams", "status": "Eligible" },
+  { "id": "S1003", "name": "Carol Brown", "status": "Voted" },
+  { "id": "S1004", "name": "David Lee", "status": "Ineligible" },
+  { "id": "student", "name": "Test Student", "status": "Eligible" }
+]

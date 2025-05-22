@@ -27,9 +27,9 @@ export type VoteSelection = {
   [categoryId: string]: string; // candidateId
 };
 
-// Basic Student type for admin management
+// Updated Student type
 export type Student = {
-  id: string; // Could be student ID
+  id: string; // Student ID
   name: string;
   status: 'Eligible' | 'Voted' | 'Ineligible';
 };
@@ -48,4 +48,3 @@ export type VotingSession = {
 export interface DisplayCandidate extends Candidate {
   categoryName?: string;
 }
-

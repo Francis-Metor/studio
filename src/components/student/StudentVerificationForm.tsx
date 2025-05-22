@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Terminal, CheckCircle, XCircle, Loader2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ROUTES } from '@/lib/constants';
 import { handleStudentVerification, type VerificationFormState } from '@/app/student/verify/actions';
@@ -33,45 +33,48 @@ export default function StudentVerificationForm() {
   const { toast } = useToast();
   const { setStudentDetails } = useAppState();
 
-  const initialState: VerificationFormState = { message: undefined, errors: undefined, aiResponse: undefined, validatedData: undefined };
+  const initialState: VerificationFormState = {};
   const [state, formAction] = useActionState(handleStudentVerification, initialState);
 
   useEffect(() => {
-    if (state.message && state.aiResponse) { // AI response is present
-      if (state.aiResponse.isValidStudentId && state.aiResponse.isValidName) { // AI says it's valid
+    if (state.message && state.aiResponse) {
+      if (state.aiResponse.overallValidation) { // Check the new overallValidation flag
         toast({
           title: 'Verification Successful',
-          description: state.message, // "Verification successful. Redirecting to vote..."
+          description: state.aiResponse.feedback || state.message,
           variant: 'default',
         });
         
-        // Student details are passed back in `state.validatedData` on success
         if (state.validatedData) {
-          const { studentId, name } = state.validatedData;
-          setStudentDetails({ studentId, name });
+          setStudentDetails({ 
+            studentId: state.validatedData.studentId, 
+            name: state.validatedData.name // Use the name from validatedData
+          });
+          router.push(ROUTES.STUDENT_VOTE);
         } else {
-          // This case should ideally not be hit if action.ts is correctly populating validatedData on success
           console.warn("Student details for context are missing from the successful verification response.");
+           toast({
+            title: 'Context Error',
+            description: "Verification seemed successful but student details could not be set for the session.",
+            variant: 'destructive',
+          });
         }
-        router.push(ROUTES.STUDENT_VOTE);
-      } else { // AI says it's invalid
-        toast({
-          title: 'Verification Issues',
-          description: state.aiResponse.feedback || state.message || "Please check the details.",
-          variant: 'destructive',
-        });
+      } else { // AI validation failed (e.g., ID not found, name mismatch, not eligible)
+        // No toast here, rely on the Alert component below for AI feedback
       }
-    } else if (state.message && !state.aiResponse && !state.errors) { // General error from action (e.g. caught exception before AI response)
+    } else if (state.message && !state.aiResponse && !state.errors) { 
        toast({
-          title: 'Error',
+          title: 'Verification Error',
           description: state.message,
           variant: 'destructive',
         });
     }
-    // Note: Zod errors (state.errors.studentId / state.errors.name) are handled by inline messages.
-    // Form-level errors (state.errors._form) from AI are handled by the Alert component below.
+    // Zod errors (state.errors.studentId / state.errors.name) are handled by inline messages.
+    // Form-level errors from AI (state.errors._form) or detailed AI feedback (state.aiResponse.feedback) are handled by the Alert component below.
   }, [state, router, toast, setStudentDetails]);
   
+  const showAISuccessFeedback = state.aiResponse?.overallValidation && state.aiResponse.feedback;
+  const showAIFailureFeedback = state.aiResponse && !state.aiResponse.overallValidation && state.aiResponse.feedback;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -81,7 +84,7 @@ export default function StudentVerificationForm() {
           id="studentId"
           name="studentId"
           type="text"
-          placeholder="e.g., S12345"
+          placeholder="e.g., S1001"
           required
           className="bg-background"
           aria-describedby="studentId-error"
@@ -97,7 +100,7 @@ export default function StudentVerificationForm() {
           id="name"
           name="name"
           type="text"
-          placeholder="e.g., Jane Doe"
+          placeholder="e.g., Alice Johnson"
           required
           className="bg-background"
           aria-describedby="name-error"
@@ -107,6 +110,7 @@ export default function StudentVerificationForm() {
         )}
       </div>
       
+      {/* Display general form errors (e.g., from zod parse fail message or server error before AI) */}
       {state.errors?._form && (
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
@@ -115,24 +119,47 @@ export default function StudentVerificationForm() {
         </Alert>
       )}
 
-      {state.aiResponse && !(state.aiResponse.isValidStudentId && state.aiResponse.isValidName) && state.aiResponse.feedback && !state.errors?._form && (
-        // This alert shows AI feedback if it's an AI validation failure but not already shown by errors._form
-        // Useful if errors._form is not populated but AI still had feedback on invalid fields.
+      {/* Display AI feedback if validation FAILED */}
+      {showAIFailureFeedback && (
         <Alert variant="destructive" className="mt-4">
           <XCircle className="h-4 w-4" />
-          <AlertTitle>AI Validation Feedback</AlertTitle>
+          <AlertTitle>Verification Issue</AlertTitle>
           <AlertDescription>
-            <p>{state.aiResponse.feedback}</p>
+            <p>{state.aiResponse!.feedback}</p>
             <ul className="list-disc list-inside mt-2 text-xs">
-              <li>Student ID Valid: {state.aiResponse.isValidStudentId ? 'Yes' : 'No'}</li>
-              <li>Name Valid: {state.aiResponse.isValidName ? 'Yes' : 'No'}</li>
+              <li>ID Found: {state.aiResponse!.isStudentIdFound ? 'Yes' : 'No'}</li>
+              {state.aiResponse!.isStudentIdFound && <li>Name Match: {state.aiResponse!.isNameMatch ? 'Yes' : 'No'}</li>}
+              {state.aiResponse!.isNameMatch && <li>Eligible: {state.aiResponse!.isEligible ? 'Yes' : 'No'}</li>}
             </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+       {/* Display AI feedback if validation SUCCEEDED (but before redirect, for clarity if needed) */}
+      {showAISuccessFeedback && (
+        <Alert variant="default" className="mt-4 border-green-500">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle className="text-green-700">Verification Success</AlertTitle>
+          <AlertDescription>
+            {state.aiResponse!.feedback} Redirecting...
           </AlertDescription>
         </Alert>
       )}
       
       <SubmitButton />
+
+       <Alert variant="default" className="mt-6 text-sm">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Test Credentials</AlertTitle>
+          <AlertDescription>
+            Try ID: <strong>S1001</strong>, Name: <strong>Alice Johnson</strong> (Eligible) <br />
+            Try ID: <strong>S1002</strong>, Name: <strong>Bob Williams</strong> (Eligible) <br />
+            Try ID: <strong>S1003</strong>, Name: <strong>Carol Brown</strong> (Voted - Not Eligible) <br />
+            Try ID: <strong>student</strong>, Name: <strong>Test Student</strong> (Eligible - for general login) <br/>
+            Try ID: <strong>S9999</strong>, Name: <strong>Non Existent</strong> (ID not found) <br />
+            Try ID: <strong>S1001</strong>, Name: <strong>Wrong Name</strong> (Name mismatch)
+          </AlertDescription>
+        </Alert>
     </form>
   );
 }
-
