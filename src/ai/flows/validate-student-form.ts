@@ -36,26 +36,25 @@ const prompt = ai.definePrompt({
   name: 'validateStudentFormPrompt',
   input: {schema: ValidateStudentFormInputSchema},
   output: {schema: ValidateStudentFormOutputSchema},
-  prompt: `You are an expert AI form validator. Your primary task for this request is to validate the provided Student ID and Full Name.
+  prompt: `You are an AI form validator assisting with a student voting application. For this student VERIFICATION step, your primary goal is to allow a user to proceed with testing if they provide plausible, non-empty inputs for Student ID and Full Name.
 
 1.  **Student ID Validation (Output: \`isValidStudentId\`)**:
-    *   A valid student ID should appear to be a unique identifier.
-    *   It should not be overly generic (e.g., "id", "student" are not good, but "student123" or "S12345" might be okay).
-    *   It should not be excessively short (e.g., 1 character) or consist purely of symbols.
+    *   Consider the Student ID VALID if it is not empty and contains at least one alphanumeric character. Examples: "S12345", "test001", "A1".
     *   Set \`isValidStudentId\` to \`true\` if it meets these criteria, \`false\` otherwise.
 
 2.  **Name Validation (Output: \`isValidName\`)**:
-    *   A valid name should look like a real person's full name.
-    *   It should typically consist of at least two words.
-    *   It should primarily contain letters.
+    *   Consider the Full Name VALID if it is not empty and appears to be a name (e.g., contains at least one space, suggesting multiple words, primarily letters). Examples: "Test User", "Jane Doe", "Student Name".
     *   Set \`isValidName\` to \`true\` if it meets these criteria, \`false\` otherwise.
 
-The \`category\` and \`candidate\` fields are provided but are NOT the focus of this specific validation step. You should still set \`isValidCategory\` and \`isValidCandidate\` based on their content (e.g., to \`false\` if they are empty or not applicable, or \`true\` if you deem them valid). However, the critical outputs for student verification are \`isValidStudentId\` and \`isValidName\`.
+3.  **Category and Candidate Validation (Outputs: \`isValidCategory\`, \`isValidCandidate\`)**:
+    *   For this initial verification step, the user has not yet selected a category or candidate.
+    *   Therefore, set \`isValidCategory\` to \`true\` and \`isValidCandidate\` to \`true\` as these fields are not being actively validated at this stage.
 
 **Feedback (Output: \`feedback\`)**:
-Provide a concise feedback message.
-*   If both \`studentId\` and \`name\` are valid, the feedback should be positive (e.g., "Student ID and Name appear valid.").
-*   If either \`studentId\` or \`name\` (or both) are invalid, the feedback should clearly state which field(s) are problematic and a brief reason (e.g., "Student ID is too generic. Name appears valid." or "Name seems too short. Student ID is invalid.").
+*   If both \`studentId\` and \`name\` are considered valid by the lenient criteria above, provide positive feedback: "Student ID and Name look good for proceeding."
+*   If \`studentId\` is invalid (e.g., empty), feedback should be: "Student ID is required."
+*   If \`name\` is invalid (e.g., empty), feedback should be: "Full Name is required."
+*   If both are invalid, combine feedback: "Student ID and Full Name are required."
 
 Input Data:
 Student ID: {{{studentId}}}
@@ -63,7 +62,7 @@ Name: {{{name}}}
 Category: {{{category}}}
 Candidate: {{{candidate}}}
 
-Ensure all boolean fields in the output schema (\`isValidStudentId\`, \`isValidName\`, \`isValidCategory\`, \`isValidCandidate\`) are set.
+Ensure all boolean fields in the output schema (\`isValidStudentId\`, \`isValidName\`, \`isValidCategory\`, \`isValidCandidate\`) are set according to these lenient verification guidelines.
 `,
 });
 
@@ -78,4 +77,3 @@ const validateStudentFormFlow = ai.defineFlow(
     return output!;
   }
 );
-
