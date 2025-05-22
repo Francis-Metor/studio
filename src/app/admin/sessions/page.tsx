@@ -4,16 +4,18 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Added Input import
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"; // Added Dialog imports
-import { Timer, ArrowLeft, PauseCircle, StopCircle, PlusCircle, Save } from "lucide-react"; // Added Save Icon
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Timer, ArrowLeft, PauseCircle, StopCircle, PlusCircle, Save } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import type { VotingSession, VotingSessionStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useAppState } from '@/context/AppStateContext';
+import { format } from 'date-fns';
 
 const initialSessions: VotingSession[] = [
   { id: 'session1', name: 'Spring Elections 2024', startDate: '2024-03-10 09:00', endDate: '2024-03-12 17:00', status: 'Active' },
@@ -30,6 +32,7 @@ export default function AdminSessionsPage() {
   const { toast } = useToast();
   const [isAddSessionDialogOpen, setIsAddSessionDialogOpen] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
+  const { defaultSessionStartTime, defaultSessionEndTime } = useAppState();
 
   useEffect(() => {
     setSessions(initialSessions);
@@ -41,17 +44,28 @@ export default function AdminSessionsPage() {
       toast({ title: "Error", description: "Session name cannot be empty.", variant: "destructive" });
       return;
     }
+
+    const today = new Date();
+    const twoDaysLater = new Date(today);
+    twoDaysLater.setDate(today.getDate() + 2);
+
+    const startTime = defaultSessionStartTime || "09:00";
+    const endTime = defaultSessionEndTime || "17:00";
+    
+    const startDateString = `${format(today, 'yyyy-MM-dd')} ${startTime}`;
+    const endDateString = `${format(twoDaysLater, 'yyyy-MM-dd')} ${endTime}`;
+
     const newSession: VotingSession = {
       id: generateId(),
       name: newSessionName.trim(),
-      startDate: new Date().toISOString().split('T')[0] + " 10:00",
-      endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + " 17:00", // 2 days from now
+      startDate: startDateString,
+      endDate: endDateString, 
       status: 'Pending',
     };
     setSessions(prev => [newSession, ...prev]);
     toast({ title: "Session Added", description: `"${newSession.name}" created with Pending status.` });
     setIsAddSessionDialogOpen(false);
-    setNewSessionName(''); // Reset for next time
+    setNewSessionName(''); 
   };
 
   const handlePauseFirstActive = () => {
@@ -236,9 +250,6 @@ export default function AdminSessionsPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      {/* <Button variant="outline" size="sm" disabled>
-                        <Edit3 className="mr-2 h-3 w-3" /> Edit Details (Soon)
-                      </Button> */}
                   </CardContent>
                 </Card>
               ))}

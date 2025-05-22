@@ -2,7 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { UserRole } from '@/lib/constants';
 
 interface StudentDetails {
@@ -14,9 +14,13 @@ interface AppState {
   role: UserRole | null;
   studentDetails: StudentDetails | null;
   electionName: string | null;
+  defaultSessionStartTime: string | null;
+  defaultSessionEndTime: string | null;
   setRole: (role: UserRole | null) => void;
   setStudentDetails: (details: StudentDetails | null) => void;
   setElectionName: (name: string | null) => void;
+  setDefaultSessionStartTime: (time: string | null) => void;
+  setDefaultSessionEndTime: (time: string | null) => void;
   logout: () => void;
 }
 
@@ -26,11 +30,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [studentDetails, setStudentDetails] = useState<StudentDetails | null>(null);
   const [electionName, setElectionName] = useState<string | null>("CampusVote General Election");
+  const [defaultSessionStartTime, setDefaultSessionStartTime] = useState<string | null>("09:00");
+  const [defaultSessionEndTime, setDefaultSessionEndTime] = useState<string | null>("17:00");
 
   const logout = () => {
     setRole(null);
     setStudentDetails(null);
-    // Election name could persist or be reset here, for now it persists client-side until app reload
+    // Election name and default times persist client-side for the session
   };
 
   return (
@@ -38,9 +44,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       role, 
       studentDetails, 
       electionName,
+      defaultSessionStartTime,
+      defaultSessionEndTime,
       setRole, 
       setStudentDetails, 
       setElectionName,
+      setDefaultSessionStartTime,
+      setDefaultSessionEndTime,
       logout 
     }}>
       {children}
