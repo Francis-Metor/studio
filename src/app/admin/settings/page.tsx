@@ -1,12 +1,39 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Settings, ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useAppState } from '@/context/AppStateContext';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminSettingsPage() {
+  const { electionName: globalElectionName, setElectionName: setGlobalElectionName } = useAppState();
+  const { toast } = useToast();
+  
+  const [currentElectionName, setCurrentElectionName] = useState(globalElectionName || '');
+  const [appTheme, setAppTheme] = useState("Light Blue (Default)"); // Placeholder
+
+  useEffect(() => {
+    if (globalElectionName) {
+      setCurrentElectionName(globalElectionName);
+    }
+  }, [globalElectionName]);
+
+  const handleSaveSettings = () => {
+    setGlobalElectionName(currentElectionName);
+    toast({
+      title: "Settings Saved",
+      description: "The election name has been updated.",
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -28,50 +55,55 @@ export default function AdminSettingsPage() {
           <CardDescription>Manage general settings for the CampusVote application.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            This section is intended for configuring application-wide parameters such as the election name,
-            visual theme preferences, email notification settings (if applicable), and other global options
-            that affect the entire system.
-          </p>
-          <Alert className="mt-6">
-            <Settings className="h-4 w-4" />
-            <AlertTitle>Placeholder Content</AlertTitle>
-            <AlertDescription>
-              Currently, these settings are for demonstration purposes only and are not functional.
-              Future development could include:
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                <li>Setting the main election title.</li>
-                <li>Choosing a color theme or uploading a logo.</li>
-                <li>Configuring date formats or timezones.</li>
-                <li>Setting default behaviors for new voting sessions.</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="electionName">Election Name</Label>
+              <Input 
+                type="text" 
+                name="electionName" 
+                id="electionName" 
+                className="mt-1 block w-full p-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background" 
+                placeholder="e.g., Spring General Elections" 
+                value={currentElectionName}
+                onChange={(e) => setCurrentElectionName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="appTheme">Application Theme (Visual Only)</Label>
+              <select 
+                id="appTheme" 
+                name="appTheme" 
+                className="mt-1 block w-full p-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background text-foreground" 
+                value={appTheme}
+                onChange={(e) => setAppTheme(e.target.value)}
+                disabled 
+              >
+                <option>Light Blue (Default)</option>
+                <option>Dark Mode</option>
+                <option>University Branded</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">Theme selection is currently a visual placeholder and does not change the application's theme.</p>
+            </div>
+            <Button onClick={handleSaveSettings}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Settings
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Example Setting Section</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="space-y-4">
-                <div>
-                    <label htmlFor="electionName" className="block text-sm font-medium text-foreground">Election Name</label>
-                    <input type="text" name="electionName" id="electionName" className="mt-1 block w-full p-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background" placeholder="e.g., Spring General Elections" disabled/>
-                </div>
-                <div>
-                    <label htmlFor="appTheme" className="block text-sm font-medium text-foreground">Application Theme</label>
-                    <select id="appTheme" name="appTheme" className="mt-1 block w-full p-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background" disabled>
-                        <option>Light Blue (Default)</option>
-                        <option>Dark Mode</option>
-                        <option>University Branded</option>
-                    </select>
-                </div>
-                 <Button disabled>Save Settings (Coming Soon)</Button>
-            </div>
-        </CardContent>
-      </Card>
+      <Alert className="mt-6">
+        <Settings className="h-4 w-4" />
+        <AlertTitle>Additional Settings Placeholder</AlertTitle>
+        <AlertDescription>
+          More settings could be added here in the future, such as:
+          <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+            <li>Email notification configurations.</li>
+            <li>Date formats or timezones.</li>
+            <li>Default behaviors for new voting sessions.</li>
+          </ul>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
