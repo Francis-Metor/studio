@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Check, Send, UserCircle2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import votingCategoriesData from '@/lib/voting-data.json'; // Updated import
+import votingCategoriesData from '@/lib/voting-data.json';
 import type { VoteSelection, VotingCategory, Candidate } from '@/lib/types';
 import { ROUTES } from '@/lib/constants';
 import { useAppState } from '@/context/AppStateContext';
@@ -20,14 +20,13 @@ import { useAppState } from '@/context/AppStateContext';
 export default function VotingArea() {
   const router = useRouter();
   const { toast } = useToast();
-  const { studentDetails, logout } = useAppState();
+  const { studentDetails, logout, recordVote } = useAppState(); // Added recordVote
 
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selections, setSelections] = useState<VoteSelection>({});
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Cast the imported JSON data to the correct type
   const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
 
   useEffect(() => {
@@ -68,20 +67,22 @@ export default function VotingArea() {
 
   const handleSubmitVotes = () => {
     setIsLoading(true);
-    // Mock submission
+    
     setTimeout(() => {
       setIsLoading(false);
-      console.log("Votes Submitted:", selections);
+      recordVote(selections); // Record votes in AppStateContext
       toast({
         title: 'Votes Submitted Successfully!',
         description: 'Thank you for participating.',
         className: 'bg-green-500 text-white', 
       });
+      // Optionally, update student status to 'Voted' here if managing that in AppStateContext
+      // For this prototype, we are just recording votes.
       setSelections({});
       setCurrentCategoryIndex(0);
       setIsConfirming(false);
       logout(); 
-      router.push(ROUTES.STUDENT_VERIFY); 
+      router.push(ROUTES.LOGIN); // Redirect to login after vote, as student might be "logged out"
     }, 1500);
   };
 

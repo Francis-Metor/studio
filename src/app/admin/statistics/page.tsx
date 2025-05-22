@@ -1,35 +1,31 @@
 
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ArrowLeft, PieChart, Users, TrendingUp } from "lucide-react";
+import { BarChart3, ArrowLeft, PieChart, Users, TrendingUp, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
+import { useAppState } from '@/context/AppStateContext';
+import votingCategoriesData from '@/lib/voting-data.json';
+import type { VotingCategory } from '@/lib/types';
 
 export default function AdminStatisticsPage() {
+  const { voteCounts, totalVotesCasted } = useAppState();
+  const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
+
   const placeholderStats = [
     {
       title: "Overall Turnout",
-      value: "72%",
-      description: "Percentage of eligible students who voted.",
+      value: "N/A",
+      description: "Calculation not yet implemented.",
       icon: Users,
     },
     {
-      title: "Total Votes Cast",
-      value: "1,234",
-      description: "Total number of votes recorded across all categories.",
-      icon: TrendingUp,
-    },
-    {
       title: "Participation by Department",
-      value: "Coming Soon",
-      description: "Breakdown of voter turnout by academic department.",
+      value: "N/A",
+      description: "Data not available for this metric.",
       icon: PieChart,
-    },
-     {
-      title: "Results: President",
-      value: "Jane Doe (55%)",
-      description: "Leading candidate for President.",
-      icon: BarChart3,
     },
   ];
 
@@ -51,18 +47,23 @@ export default function AdminStatisticsPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Election Performance Overview</CardTitle>
-          <CardDescription>Key metrics and insights from the voting process. Detailed charts and reports will be available here.</CardDescription>
+          <CardDescription>Key metrics from the voting process. Vote counts are updated in real-time for the current session.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            This section will provide visual representations of voting data, including turnout rates,
-            results per category, and other relevant analytics to help understand election outcomes.
-            For now, these are placeholder statistics.
-          </p>
+           <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">Total Votes Cast</CardTitle>
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{totalVotesCasted}</div>
+              <p className="text-xs text-muted-foreground pt-1">Total number of votes recorded across all categories in this session.</p>
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-6">
         {placeholderStats.map((stat) => (
           <Card key={stat.title} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -77,23 +78,47 @@ export default function AdminStatisticsPage() {
         ))}
       </div>
 
-       <Card>
+      <Card>
         <CardHeader>
-          <CardTitle>Detailed Charts (Placeholder)</CardTitle>
+          <CardTitle className="flex items-center">
+            <ListChecks className="mr-2 text-primary" />
+            Results by Category
+          </CardTitle>
+          <CardDescription>Live vote counts per candidate within each category for the current session.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="p-4 border rounded-md bg-muted/30 text-center">
-                <PieChart className="h-16 w-16 mx-auto text-primary/70 mb-2" />
-                <p className="text-muted-foreground">Placeholder for Votes Distribution Chart</p>
-            </div>
-             <div className="p-4 border rounded-md bg-muted/30 text-center">
-                <BarChart3 className="h-16 w-16 mx-auto text-primary/70 mb-2" />
-                <p className="text-muted-foreground">Placeholder for Candidate Performance Chart</p>
-            </div>
+        <CardContent className="space-y-6">
+          {categories.length === 0 && <p className="text-muted-foreground">No voting categories found.</p>}
+          {categories.map((category) => {
+            const categoryTotalVotes = category.candidates.reduce((sum, candidate) => sum + (voteCounts[candidate.id] || 0), 0);
+            return (
+              <Card key={category.id} className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-xl">{category.name}</CardTitle>
+                  <CardDescription>Total votes in this category: {categoryTotalVotes}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {category.candidates.length === 0 && <p className="text-sm text-muted-foreground">No candidates in this category.</p>}
+                  <ul className="space-y-2">
+                    {category.candidates.map((candidate) => {
+                      const count = voteCounts[candidate.id] || 0;
+                      const percentage = categoryTotalVotes > 0 ? ((count / categoryTotalVotes) * 100).toFixed(1) : "0.0";
+                      return (
+                        <li key={candidate.id} className="flex justify-between items-center p-2 border-b last:border-b-0">
+                          <span className="font-medium">{candidate.name}</span>
+                          <div className="text-right">
+                            <span className="text-primary font-semibold">{count} vote(s)</span>
+                            <span className="text-xs text-muted-foreground ml-2">({percentage}%)</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
         </CardContent>
       </Card>
-
     </div>
   );
 }
-
