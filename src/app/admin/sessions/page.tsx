@@ -4,30 +4,28 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Timer, ArrowLeft, PauseCircle, StopCircle, PlusCircle, Save } from "lucide-react";
+import { Timer, ArrowLeft, PauseCircle, StopCircle } from "lucide-react"; // Removed PlusCircle, Save
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import type { VotingSession, VotingSessionStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useAppState } from '@/context/AppStateContext';
-import { format } from 'date-fns';
+// Removed useAppState and format as they were primarily for new session defaults
 import initialSessionsData from '@/lib/sessions-data.json'; // Import the JSON data
 
-// Helper to generate unique IDs
-const generateId = () => `sess_${Math.random().toString(36).substr(2, 9)}`;
+// Helper to generate unique IDs (kept in case needed elsewhere, but not for adding sessions here)
+// const generateId = () => `sess_${Math.random().toString(36).substr(2, 9)}`;
 
 export default function AdminSessionsPage() {
   const [sessions, setSessions] = useState<VotingSession[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
-  const [isAddSessionDialogOpen, setIsAddSessionDialogOpen] = useState(false);
-  const [newSessionName, setNewSessionName] = useState('');
-  const { defaultSessionStartTime, defaultSessionEndTime } = useAppState();
+  // Removed state related to adding new session dialog
+  // const [isAddSessionDialogOpen, setIsAddSessionDialogOpen] = useState(false);
+  // const [newSessionName, setNewSessionName] = useState('');
+  // const { defaultSessionStartTime, defaultSessionEndTime } = useAppState(); // No longer needed here
 
   useEffect(() => {
     // Initialize sessions from the imported JSON data
@@ -35,6 +33,8 @@ export default function AdminSessionsPage() {
     setIsMounted(true);
   }, []);
 
+  // Removed handleAddNewSession function as the button is removed
+  /*
   const handleAddNewSession = () => {
     if (!newSessionName.trim()) {
       toast({ title: "Error", description: "Session name cannot be empty.", variant: "destructive" });
@@ -63,6 +63,7 @@ export default function AdminSessionsPage() {
     setIsAddSessionDialogOpen(false);
     setNewSessionName(''); 
   };
+  */
 
   const handlePauseFirstActive = () => {
     setSessions(prev => {
@@ -159,43 +160,11 @@ export default function AdminSessionsPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Voting Session Control</CardTitle>
-          <CardDescription>Quick actions to manage sessions. These actions typically affect the first eligible session.</CardDescription>
+          <CardDescription>Quick actions to manage sessions. These actions typically affect the first eligible session. Sessions are pre-defined in system data.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Dialog open={isAddSessionDialogOpen} onOpenChange={setIsAddSessionDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => { setNewSessionName(''); setIsAddSessionDialogOpen(true); }} className="w-full">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add New Session
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add New Voting Session</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="sessionName">Session Name</Label>
-                    <Input 
-                      id="sessionName" 
-                      value={newSessionName} 
-                      onChange={(e) => setNewSessionName(e.target.value)} 
-                      placeholder="e.g., Student Council Elections Fall 2024" 
-                      required 
-                    />
-                  </div>
-                </div>
-                <DialogFooter className="pt-4">
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline" onClick={() => setNewSessionName('')}>Cancel</Button>
-                  </DialogClose>
-                  <Button onClick={handleAddNewSession}>
-                    <Save className="mr-2 h-4 w-4" /> Create Session
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Adjusted grid to sm:grid-cols-2 from lg:grid-cols-3 */}
+            {/* Add New Session Dialog and Button Removed */}
              <Button onClick={handlePauseFirstActive} variant="secondary" className="w-full">
               <PauseCircle className="mr-2 h-4 w-4" />
               Pause First Active
@@ -251,10 +220,11 @@ export default function AdminSessionsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">No voting sessions found. Try adding one.</p>
+            <p className="text-muted-foreground text-center py-4">No voting sessions found. Check `sessions-data.json`.</p>
           )}
         </CardContent>
       </Card>
     </div>
   );
 }
+
