@@ -1,100 +1,57 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // Removed unused 'useState'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Timer, ArrowLeft, PauseCircle, StopCircle } from "lucide-react"; // Removed PlusCircle, Save
+import { Timer, ArrowLeft, PauseCircle, StopCircle } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import type { VotingSession, VotingSessionStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-// Removed useAppState and format as they were primarily for new session defaults
-import initialSessionsData from '@/lib/sessions-data.json'; // Import the JSON data
-
-// Helper to generate unique IDs (kept in case needed elsewhere, but not for adding sessions here)
-// const generateId = () => `sess_${Math.random().toString(36).substr(2, 9)}`;
+import { useAppState } from '@/context/AppStateContext'; // Import useAppState
 
 export default function AdminSessionsPage() {
-  const [sessions, setSessions] = useState<VotingSession[]>([]);
+  const { 
+    sessions, 
+    setSessions, 
+    updateSessionStatus // Use global updateSessionStatus
+  } = useAppState(); 
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
-  // Removed state related to adding new session dialog
-  // const [isAddSessionDialogOpen, setIsAddSessionDialogOpen] = useState(false);
-  // const [newSessionName, setNewSessionName] = useState('');
-  // const { defaultSessionStartTime, defaultSessionEndTime } = useAppState(); // No longer needed here
 
   useEffect(() => {
-    // Initialize sessions from the imported JSON data
-    setSessions(initialSessionsData as VotingSession[]);
     setIsMounted(true);
   }, []);
 
-  // Removed handleAddNewSession function as the button is removed
-  /*
-  const handleAddNewSession = () => {
-    if (!newSessionName.trim()) {
-      toast({ title: "Error", description: "Session name cannot be empty.", variant: "destructive" });
-      return;
-    }
-
-    const today = new Date();
-    const twoDaysLater = new Date(today);
-    twoDaysLater.setDate(today.getDate() + 2);
-
-    const startTime = defaultSessionStartTime || "09:00";
-    const endTime = defaultSessionEndTime || "17:00";
-    
-    const startDateString = `${format(today, 'yyyy-MM-dd')} ${startTime}`;
-    const endDateString = `${format(twoDaysLater, 'yyyy-MM-dd')} ${endTime}`;
-
-    const newSession: VotingSession = {
-      id: generateId(),
-      name: newSessionName.trim(),
-      startDate: startDateString,
-      endDate: endDateString, 
-      status: 'Pending',
-    };
-    setSessions(prev => [newSession, ...prev]);
-    toast({ title: "Session Added", description: `"${newSession.name}" created with Pending status.` });
-    setIsAddSessionDialogOpen(false);
-    setNewSessionName(''); 
-  };
-  */
 
   const handlePauseFirstActive = () => {
-    setSessions(prev => {
-      const activeSessionIndex = prev.findIndex(s => s.status === 'Active');
-      if (activeSessionIndex !== -1) {
-        const updatedSessions = [...prev];
-        updatedSessions[activeSessionIndex] = { ...updatedSessions[activeSessionIndex], status: 'Paused' };
-        toast({ title: "Session Paused", description: `"${updatedSessions[activeSessionIndex].name}" is now Paused.` });
-        return updatedSessions;
-      }
+    const activeSessionIndex = sessions.findIndex(s => s.status === 'Active');
+    if (activeSessionIndex !== -1) {
+      const updatedSessionId = sessions[activeSessionIndex].id;
+      updateSessionStatus(updatedSessionId, 'Paused'); // Update global state
+      toast({ title: "Session Paused", description: `"${sessions[activeSessionIndex].name}" is now Paused.` });
+    } else {
       toast({ title: "No Active Session", description: "Could not find an active session to pause.", variant: "destructive" });
-      return prev;
-    });
+    }
   };
 
   const handleEndFirstActiveOrPaused = () => {
-    setSessions(prev => {
-      const targetSessionIndex = prev.findIndex(s => s.status === 'Active' || s.status === 'Paused');
-      if (targetSessionIndex !== -1) {
-        const updatedSessions = [...prev];
-        updatedSessions[targetSessionIndex] = { ...updatedSessions[targetSessionIndex], status: 'Closed' };
-        toast({ title: "Session Ended", description: `"${updatedSessions[targetSessionIndex].name}" is now Closed.` });
-        return updatedSessions;
-      }
+    const targetSessionIndex = sessions.findIndex(s => s.status === 'Active' || s.status === 'Paused');
+    if (targetSessionIndex !== -1) {
+      const updatedSessionId = sessions[targetSessionIndex].id;
+      updateSessionStatus(updatedSessionId, 'Closed'); // Update global state
+      toast({ title: "Session Ended", description: `"${sessions[targetSessionIndex].name}" is now Closed.` });
+    } else {
       toast({ title: "No Pausable/Endable Session", description: "No active or paused session found to end.", variant: "destructive" });
-      return prev;
-    });
+    }
   };
 
   const handleSessionStatusChange = (sessionId: string, newStatus: VotingSessionStatus) => {
-    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, status: newStatus } : s));
+    updateSessionStatus(sessionId, newStatus); // Update global state
     toast({ title: "Status Updated", description: `Session status changed to ${newStatus}.` });
   };
 
@@ -160,11 +117,10 @@ export default function AdminSessionsPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Voting Session Control</CardTitle>
-          <CardDescription>Quick actions to manage sessions. These actions typically affect the first eligible session. Sessions are pre-defined in system data.</CardDescription>
+          <CardDescription>Quick actions to manage sessions. These actions typically affect the first eligible session. New sessions are created via the Admin Settings page.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Adjusted grid to sm:grid-cols-2 from lg:grid-cols-3 */}
-            {/* Add New Session Dialog and Button Removed */}
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
              <Button onClick={handlePauseFirstActive} variant="secondary" className="w-full">
               <PauseCircle className="mr-2 h-4 w-4" />
               Pause First Active
@@ -179,8 +135,8 @@ export default function AdminSessionsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Session History & Status</CardTitle>
-          <CardDescription>View and manage individual voting session statuses.</CardDescription>
+          <CardTitle>Session History & Status ({sessions.length})</CardTitle>
+          <CardDescription>View and manage individual voting session statuses. Sessions are loaded initially and new ones can be added via Settings.</CardDescription>
         </CardHeader>
         <CardContent>
           {sessions.length > 0 ? (
@@ -220,11 +176,10 @@ export default function AdminSessionsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">No voting sessions found. Check `sessions-data.json`.</p>
+            <p className="text-muted-foreground text-center py-4">No voting sessions found. New sessions can be started from the Admin Settings page.</p>
           )}
         </CardContent>
       </Card>
     </div>
   );
 }
-
