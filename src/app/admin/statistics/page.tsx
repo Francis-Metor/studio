@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3d, ArrowLeft, PieChart, Users, TrendingUp } from "lucide-react";
+import { BarChart3, ArrowLeft, PieChart, Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 
@@ -29,7 +29,7 @@ export default function AdminStatisticsPage() {
       title: "Results: President",
       value: "Jane Doe (55%)",
       description: "Leading candidate for President.",
-      icon: BarChart3d,
+      icon: BarChart3,
     },
   ];
 
@@ -37,7 +37,7 @@ export default function AdminStatisticsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold flex items-center">
-          <BarChart3d className="mr-3 text-primary" size={32} />
+          <BarChart3 className="mr-3 text-primary" size={32} />
           Voting Statistics
         </h1>
         <Button variant="outline" asChild>
@@ -87,7 +87,7 @@ export default function AdminStatisticsPage() {
                 <p className="text-muted-foreground">Placeholder for Votes Distribution Chart</p>
             </div>
              <div className="p-4 border rounded-md bg-muted/30 text-center">
-                <BarChart3d className="h-16 w-16 mx-auto text-primary/70 mb-2" />
+                <BarChart3 className="h-16 w-16 mx-auto text-primary/70 mb-2" />
                 <p className="text-muted-foreground">Placeholder for Candidate Performance Chart</p>
             </div>
         </CardContent>
@@ -96,3 +96,4 @@ export default function AdminStatisticsPage() {
     </div>
   );
 }
+
