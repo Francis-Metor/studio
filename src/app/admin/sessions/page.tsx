@@ -16,12 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useAppState } from '@/context/AppStateContext';
 import { format } from 'date-fns';
-
-const initialSessions: VotingSession[] = [
-  { id: 'session1', name: 'Spring Elections 2024', startDate: '2024-03-10 09:00', endDate: '2024-03-12 17:00', status: 'Active' },
-  { id: 'session2', name: 'Fall Referendum 2023', startDate: '2023-10-05 09:00', endDate: '2023-10-05 17:00', status: 'Closed' },
-  { id: 'session3', name: 'Summer Council Vote', startDate: '2024-07-15 10:00', endDate: '2024-07-16 18:00', status: 'Pending' },
-];
+import initialSessionsData from '@/lib/sessions-data.json'; // Import the JSON data
 
 // Helper to generate unique IDs
 const generateId = () => `sess_${Math.random().toString(36).substr(2, 9)}`;
@@ -35,7 +30,8 @@ export default function AdminSessionsPage() {
   const { defaultSessionStartTime, defaultSessionEndTime } = useAppState();
 
   useEffect(() => {
-    setSessions(initialSessions);
+    // Initialize sessions from the imported JSON data
+    setSessions(initialSessionsData as VotingSession[]);
     setIsMounted(true);
   }, []);
 
