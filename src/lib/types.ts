@@ -35,15 +35,17 @@ export type Student = {
 };
 
 // Basic Voting Session type for admin management
+export type VotingSessionStatus = 'Pending' | 'Active' | 'Paused' | 'Closed';
 export type VotingSession = {
   id: string;
   name: string;
-  startDate: string; // ISO string date
-  endDate: string; // ISO string date
-  status: 'Pending' | 'Active' | 'Paused' | 'Closed';
+  startDate: string; // ISO string date or descriptive string
+  endDate: string; // ISO string date or descriptive string
+  status: VotingSessionStatus;
 };
 
 // Helper type for displaying candidate with category name in the table
 export interface DisplayCandidate extends Candidate {
   categoryName?: string;
 }
+
