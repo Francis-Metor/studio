@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,8 +35,8 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
 
-    /* Sidebar variables, can be adjusted if sidebar is used extensively or kept for consistency */
-    --sidebar-background: 220 10% 12%; /* Darker for contrast if needed, or align with main theme */
+    /* Sidebar variables */
+    --sidebar-background: 220 10% 12%;
     --sidebar-foreground: 210 20% 85%;
     --sidebar-primary: 207 68% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -76,6 +77,216 @@ body {
     --sidebar-border: 220 13% 20%;
     --sidebar-ring: 207 68% 53%;
   }
+
+  /* Red Theme */
+  .theme-red {
+    --primary: 0 80% 55%; --primary-foreground: 0 0% 100%;
+    --background: 0 60% 96%; --foreground: 0 50% 15%;
+    --card: 0 30% 98%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 0 70% 88%; --secondary-foreground: 0 80% 55%;
+    --muted: 0 30% 94%; --muted-foreground: 0 25% 60%;
+    --accent: 30 85% 55%; --accent-foreground: 0 0% 100%; /* Orange as accent */
+    --border: 0 40% 90%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 0 50% 15%; --sidebar-foreground: 0 60% 90%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 0 50% 25%; --sidebar-ring: var(--ring);
+  }
+  .theme-red.dark {
+    --primary: 0 80% 55%; --primary-foreground: 0 0% 100%;
+    --background: 0 50% 12%; --foreground: 0 60% 92%;
+    --card: 0 40% 18%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 0 60% 25%; --secondary-foreground: 0 70% 85%;
+    --muted: 0 40% 22%; --muted-foreground: 0 30% 70%;
+    --accent: 30 85% 55%; --accent-foreground: 0 0% 100%;
+    --border: 0 50% 28%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 0 50% 8%; --sidebar-foreground: 0 60% 85%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 0 50% 15%; --sidebar-ring: var(--ring);
+  }
+
+  /* Orange Theme */
+  .theme-orange {
+    --primary: 30 85% 55%; --primary-foreground: 0 0% 100%;
+    --background: 30 70% 96%; --foreground: 30 60% 15%;
+    --card: 30 40% 98%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 30 80% 88%; --secondary-foreground: 30 85% 55%;
+    --muted: 30 40% 94%; --muted-foreground: 30 35% 60%;
+    --accent: 50 90% 60%; --accent-foreground: 0 0% 10%; /* Yellow as accent */
+    --border: 30 50% 90%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 30 60% 15%; --sidebar-foreground: 30 70% 90%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 30 60% 25%; --sidebar-ring: var(--ring);
+  }
+  .theme-orange.dark {
+    --primary: 30 85% 55%; --primary-foreground: 0 0% 100%;
+    --background: 30 60% 12%; --foreground: 30 70% 92%;
+    --card: 30 50% 18%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 30 70% 25%; --secondary-foreground: 30 80% 85%;
+    --muted: 30 50% 22%; --muted-foreground: 30 40% 70%;
+    --accent: 50 90% 60%; --accent-foreground: 0 0% 10%;
+    --border: 30 60% 28%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 30 60% 8%; --sidebar-foreground: 30 70% 85%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 30 60% 15%; --sidebar-ring: var(--ring);
+  }
+
+  /* Yellow Theme */
+  .theme-yellow {
+    --primary: 50 90% 60%; --primary-foreground: 0 0% 15%; /* Darker fg for yellow */
+    --background: 50 80% 96%; --foreground: 50 70% 15%;
+    --card: 50 50% 98%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 50 85% 88%; --secondary-foreground: 50 90% 60%;
+    --muted: 50 50% 94%; --muted-foreground: 50 45% 60%;
+    --accent: 30 85% 55%; --accent-foreground: 0 0% 100%; /* Orange as accent */
+    --border: 50 60% 90%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 50 70% 15%; --sidebar-foreground: 50 80% 90%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 50 70% 25%; --sidebar-ring: var(--ring);
+  }
+  .theme-yellow.dark {
+    --primary: 50 90% 60%; --primary-foreground: 0 0% 15%;
+    --background: 50 70% 12%; --foreground: 50 80% 92%;
+    --card: 50 60% 18%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 50 80% 25%; --secondary-foreground: 50 85% 85%;
+    --muted: 50 60% 22%; --muted-foreground: 50 50% 70%;
+    --accent: 30 85% 55%; --accent-foreground: 0 0% 100%;
+    --border: 50 70% 28%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 50 70% 8%; --sidebar-foreground: 50 80% 85%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 50 70% 15%; --sidebar-ring: var(--ring);
+  }
+
+  /* Green Theme */
+  .theme-green {
+    --primary: 120 65% 45%; --primary-foreground: 0 0% 100%;
+    --background: 120 50% 95%; --foreground: 120 40% 12%;
+    --card: 120 25% 97%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 120 55% 85%; --secondary-foreground: 120 65% 45%;
+    --muted: 120 25% 93%; --muted-foreground: 120 20% 55%;
+    --accent: 100 70% 50%; --accent-foreground: 0 0% 100%; /* Lime green as accent */
+    --border: 120 30% 88%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 120 40% 12%; --sidebar-foreground: 120 50% 88%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 120 40% 22%; --sidebar-ring: var(--ring);
+  }
+  .theme-green.dark {
+    --primary: 120 65% 45%; --primary-foreground: 0 0% 100%;
+    --background: 120 40% 10%; --foreground: 120 50% 90%;
+    --card: 120 30% 15%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 120 50% 20%; --secondary-foreground: 120 60% 80%;
+    --muted: 120 30% 18%; --muted-foreground: 120 25% 65%;
+    --accent: 100 70% 50%; --accent-foreground: 0 0% 100%;
+    --border: 120 40% 25%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 120 40% 7%; --sidebar-foreground: 120 50% 80%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 120 40% 12%; --sidebar-ring: var(--ring);
+  }
+
+  /* Vibrant Blue Theme (different from default) */
+  .theme-vibrant-blue {
+    --primary: 220 80% 60%; --primary-foreground: 0 0% 100%;
+    --background: 220 60% 96%; --foreground: 220 50% 15%;
+    --card: 220 30% 98%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 220 70% 88%; --secondary-foreground: 220 80% 60%;
+    --muted: 220 30% 94%; --muted-foreground: 220 25% 60%;
+    --accent: 190 80% 55%; --accent-foreground: 0 0% 100%; /* Cyan as accent */
+    --border: 220 40% 90%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 220 50% 15%; --sidebar-foreground: 220 60% 90%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 220 50% 25%; --sidebar-ring: var(--ring);
+  }
+  .theme-vibrant-blue.dark {
+    --primary: 220 80% 60%; --primary-foreground: 0 0% 100%;
+    --background: 220 50% 12%; --foreground: 220 60% 92%;
+    --card: 220 40% 18%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 220 60% 25%; --secondary-foreground: 220 70% 85%;
+    --muted: 220 40% 22%; --muted-foreground: 220 30% 70%;
+    --accent: 190 80% 55%; --accent-foreground: 0 0% 100%;
+    --border: 220 50% 28%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 220 50% 8%; --sidebar-foreground: 220 60% 85%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 220 50% 15%; --sidebar-ring: var(--ring);
+  }
+
+  /* Indigo Theme */
+  .theme-indigo {
+    --primary: 255 70% 60%; --primary-foreground: 0 0% 100%;
+    --background: 255 50% 96%; --foreground: 255 40% 15%;
+    --card: 255 25% 98%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 255 60% 88%; --secondary-foreground: 255 70% 60%;
+    --muted: 255 25% 94%; --muted-foreground: 255 20% 60%;
+    --accent: 280 70% 60%; --accent-foreground: 0 0% 100%; /* Violet as accent */
+    --border: 255 30% 90%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 255 40% 15%; --sidebar-foreground: 255 50% 90%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 255 40% 25%; --sidebar-ring: var(--ring);
+  }
+  .theme-indigo.dark {
+    --primary: 255 70% 60%; --primary-foreground: 0 0% 100%;
+    --background: 255 40% 12%; --foreground: 255 50% 92%;
+    --card: 255 30% 18%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 255 50% 25%; --secondary-foreground: 255 60% 85%;
+    --muted: 255 30% 22%; --muted-foreground: 255 25% 70%;
+    --accent: 280 70% 60%; --accent-foreground: 0 0% 100%;
+    --border: 255 40% 28%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 255 40% 8%; --sidebar-foreground: 255 50% 85%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 255 40% 15%; --sidebar-ring: var(--ring);
+  }
+
+  /* Violet Theme */
+  .theme-violet {
+    --primary: 280 70% 60%; --primary-foreground: 0 0% 100%;
+    --background: 280 50% 96%; --foreground: 280 40% 15%;
+    --card: 280 25% 98%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 280 60% 88%; --secondary-foreground: 280 70% 60%;
+    --muted: 280 25% 94%; --muted-foreground: 280 20% 60%;
+    --accent: 255 70% 60%; --accent-foreground: 0 0% 100%; /* Indigo as accent */
+    --border: 280 30% 90%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 280 40% 15%; --sidebar-foreground: 280 50% 90%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 280 40% 25%; --sidebar-ring: var(--ring);
+  }
+  .theme-violet.dark {
+    --primary: 280 70% 60%; --primary-foreground: 0 0% 100%;
+    --background: 280 40% 12%; --foreground: 280 50% 92%;
+    --card: 280 30% 18%; --card-foreground: var(--foreground);
+    --popover: var(--card); --popover-foreground: var(--card-foreground);
+    --secondary: 280 50% 25%; --secondary-foreground: 280 60% 85%;
+    --muted: 280 30% 22%; --muted-foreground: 280 25% 70%;
+    --accent: 255 70% 60%; --accent-foreground: 0 0% 100%;
+    --border: 280 40% 28%; --input: var(--card); --ring: var(--primary);
+    --sidebar-background: 280 40% 8%; --sidebar-foreground: 280 50% 85%;
+    --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent); --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: 280 40% 15%; --sidebar-ring: var(--ring);
+  }
 }
 
 @layer base {
@@ -86,3 +297,5 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+    

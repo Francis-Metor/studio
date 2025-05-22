@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -6,6 +7,7 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import PageWrapper from '@/components/shared/PageWrapper';
 import { AppStateProvider } from '@/context/AppStateContext';
+import ClientThemeHandler from '@/components/shared/ClientThemeHandler'; // Import the new component
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,6 +33,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
         <AppStateProvider>
+          <ClientThemeHandler /> {/* Add ClientThemeHandler here */}
           <Header />
           <PageWrapper>
             {children}
@@ -42,3 +45,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

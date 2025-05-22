@@ -13,6 +13,19 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAppState } from '@/context/AppStateContext';
 import { useToast } from '@/hooks/use-toast';
 
+const themeOptions = [
+  { name: "Light Blue (Default)", value: "default" },
+  { name: "Red", value: "theme-red" },
+  { name: "Orange", value: "theme-orange" },
+  { name: "Yellow", value: "theme-yellow" },
+  { name: "Green", value: "theme-green" },
+  { name: "Vibrant Blue", value: "theme-vibrant-blue" },
+  { name: "Indigo", value: "theme-indigo" },
+  { name: "Violet", value: "theme-violet" },
+];
+
+const allThemeClasses = themeOptions.map(t => t.value).filter(v => v !== "default");
+
 export default function AdminSettingsPage() {
   const { 
     electionName: globalElectionName, 
@@ -21,33 +34,45 @@ export default function AdminSettingsPage() {
     setDefaultSessionStartTime: setGlobalDefaultStartTime,
     defaultSessionEndTime: globalDefaultEndTime,
     setDefaultSessionEndTime: setGlobalDefaultEndTime,
+    appTheme: globalAppTheme,
+    setAppTheme: setGlobalAppTheme,
   } = useAppState();
   const { toast } = useToast();
   
   const [currentElectionName, setCurrentElectionName] = useState(globalElectionName || '');
   const [currentDefaultStartTime, setCurrentDefaultStartTime] = useState(globalDefaultStartTime || '09:00');
   const [currentDefaultEndTime, setCurrentDefaultEndTime] = useState(globalDefaultEndTime || '17:00');
-  const [appTheme, setAppTheme] = useState("Light Blue (Default)"); // Placeholder
+  const [currentAppTheme, setCurrentAppTheme] = useState(globalAppTheme || "default");
 
   useEffect(() => {
-    if (globalElectionName) {
-      setCurrentElectionName(globalElectionName);
+    if (globalElectionName) setCurrentElectionName(globalElectionName);
+    if (globalDefaultStartTime) setCurrentDefaultStartTime(globalDefaultStartTime);
+    if (globalDefaultEndTime) setCurrentDefaultEndTime(globalDefaultEndTime);
+    if (globalAppTheme) setCurrentAppTheme(globalAppTheme);
+  }, [globalElectionName, globalDefaultStartTime, globalDefaultEndTime, globalAppTheme]);
+
+  useEffect(() => {
+    const body = document.body;
+    // Remove all other theme classes
+    allThemeClasses.forEach(themeClass => {
+      body.classList.remove(themeClass);
+    });
+    // Add the new theme class if it's not default
+    if (currentAppTheme !== "default") {
+      body.classList.add(currentAppTheme);
     }
-    if (globalDefaultStartTime) {
-      setCurrentDefaultStartTime(globalDefaultStartTime);
-    }
-    if (globalDefaultEndTime) {
-      setCurrentDefaultEndTime(globalDefaultEndTime);
-    }
-  }, [globalElectionName, globalDefaultStartTime, globalDefaultEndTime]);
+    // Persist to global state (primarily for consistency if other components were to read it)
+    setGlobalAppTheme(currentAppTheme); 
+  }, [currentAppTheme, setGlobalAppTheme]);
 
   const handleSaveSettings = () => {
     setGlobalElectionName(currentElectionName);
     setGlobalDefaultStartTime(currentDefaultStartTime);
     setGlobalDefaultEndTime(currentDefaultEndTime);
+    // Theme is already set globally via useEffect on currentAppTheme change
     toast({
       title: "Settings Saved",
-      description: "Election name and default session times have been updated.",
+      description: "Election name, default session times, and application theme have been updated.",
     });
   };
 
@@ -112,20 +137,20 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <Label htmlFor="appTheme">Application Theme (Visual Only)</Label>
+              <Label htmlFor="appTheme">Application Theme</Label>
               <select 
                 id="appTheme" 
                 name="appTheme" 
                 className="mt-1 block w-full p-2 border border-input rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm bg-background text-foreground" 
-                value={appTheme}
-                onChange={(e) => setAppTheme(e.target.value)}
-                disabled 
+                value={currentAppTheme}
+                onChange={(e) => setCurrentAppTheme(e.target.value)}
               >
-                <option>Light Blue (Default)</option>
-                <option>Dark Mode</option>
-                <option>University Branded</option>
+                {themeOptions.map(theme => (
+                  <option key={theme.value} value={theme.value}>{theme.name}</option>
+                ))}
+                <option value="dark-mode-placeholder" disabled>Dark Mode (Global Toggle Coming Soon)</option> 
               </select>
-              <p className="text-xs text-muted-foreground mt-1">Theme selection is currently a visual placeholder and does not change the application's theme.</p>
+              <p className="text-xs text-muted-foreground mt-1">Changes theme immediately. Dark mode is a separate global toggle (not implemented here).</p>
             </div>
             <Button onClick={handleSaveSettings}>
               <Save className="mr-2 h-4 w-4" />
@@ -149,3 +174,5 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
+    

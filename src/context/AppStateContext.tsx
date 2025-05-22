@@ -1,3 +1,4 @@
+
 // src/context/AppStateContext.tsx
 "use client";
 
@@ -16,11 +17,13 @@ interface AppState {
   electionName: string | null;
   defaultSessionStartTime: string | null;
   defaultSessionEndTime: string | null;
+  appTheme: string; // e.g., "default", "theme-red"
   setRole: (role: UserRole | null) => void;
   setStudentDetails: (details: StudentDetails | null) => void;
   setElectionName: (name: string | null) => void;
   setDefaultSessionStartTime: (time: string | null) => void;
   setDefaultSessionEndTime: (time: string | null) => void;
+  setAppTheme: (theme: string) => void;
   logout: () => void;
 }
 
@@ -32,11 +35,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [electionName, setElectionName] = useState<string | null>("CampusVote General Election");
   const [defaultSessionStartTime, setDefaultSessionStartTime] = useState<string | null>("09:00");
   const [defaultSessionEndTime, setDefaultSessionEndTime] = useState<string | null>("17:00");
+  const [appTheme, setAppTheme] = useState<string>("default"); // Default theme
 
   const logout = () => {
     setRole(null);
     setStudentDetails(null);
-    // Election name and default times persist client-side for the session
+    // Election name, default times, and theme persist client-side for the session
   };
 
   return (
@@ -46,11 +50,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       electionName,
       defaultSessionStartTime,
       defaultSessionEndTime,
+      appTheme,
       setRole, 
       setStudentDetails, 
       setElectionName,
       setDefaultSessionStartTime,
       setDefaultSessionEndTime,
+      setAppTheme,
       logout 
     }}>
       {children}
@@ -65,3 +71,5 @@ export function useAppState() {
   }
   return context;
 }
+
+    
