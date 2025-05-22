@@ -24,7 +24,7 @@ export type Category = {
 };
 
 export type VoteSelection = {
-  [categoryId: string]: string; // candidateId
+  [categoryId: string]: string | 'skipped'; // candidateId or 'skipped'
 };
 
 // Updated Student type

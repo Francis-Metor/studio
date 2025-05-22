@@ -17,6 +17,10 @@ interface VoteCounts {
   [candidateId: string]: number;
 }
 
+interface SkipCountsByCategory {
+  [categoryId: string]: number;
+}
+
 interface AppState {
   role: UserRole | null;
   studentDetails: StudentDetails | null;
@@ -24,16 +28,19 @@ interface AppState {
   defaultSessionStartTime: string | null;
   defaultSessionEndTime: string | null;
   appTheme: string; // e.g., "default", "theme-red"
+  allowSkipVote: boolean; // New setting
   voteCounts: VoteCounts;
-  totalVotesCasted: number;
+  skipCountsByCategory: SkipCountsByCategory; // New state for skips
+  totalVotesCasted: number; // This will count actual candidate votes
   setRole: (role: UserRole | null) => void;
   setStudentDetails: (details: StudentDetails | null) => void;
   setElectionName: (name: string | null) => void;
   setDefaultSessionStartTime: (time: string | null) => void;
   setDefaultSessionEndTime: (time: string | null) => void;
   setAppTheme: (theme: string) => void;
+  setAllowSkipVote: (allow: boolean) => void; // Setter for new setting
   recordVote: (selections: VoteSelection) => void;
-  clearVoteCounts: () => void;
+  clearVoteCounts: () => void; // Also consider clearing skip counts
   logout: () => void;
 }
 
@@ -46,27 +53,40 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [defaultSessionStartTime, setDefaultSessionStartTime] = useState<string | null>("09:00");
   const [defaultSessionEndTime, setDefaultSessionEndTime] = useState<string | null>("17:00");
   const [appTheme, setAppTheme] = useState<string>("default");
+  const [allowSkipVote, setAllowSkipVote] = useState<boolean>(true); // Default to true for easier testing
   const [voteCounts, setVoteCounts] = useState<VoteCounts>({});
+  const [skipCountsByCategory, setSkipCountsByCategory] = useState<SkipCountsByCategory>({});
   const [totalVotesCasted, setTotalVotesCasted] = useState<number>(0);
 
   const recordVote = useCallback((selections: VoteSelection) => {
     setVoteCounts(prevCounts => {
       const newCounts = { ...prevCounts };
+      Object.values(selections).forEach(selectionValue => {
+        if (selectionValue !== 'skipped') {
+          newCounts[selectionValue] = (newCounts[selectionValue] || 0) + 1;
+        }
+      });
+      return newCounts;
+    });
+
+    setSkipCountsByCategory(prevSkips => {
+      const newSkips = { ...prevSkips };
       for (const categoryId in selections) {
-        const candidateId = selections[categoryId];
-        if (candidateId) {
-          newCounts[candidateId] = (newCounts[candidateId] || 0) + 1;
+        if (selections[categoryId] === 'skipped') {
+          newSkips[categoryId] = (newSkips[categoryId] || 0) + 1;
         }
       }
-      return newCounts;
+      return newSkips;
     });
   }, []);
 
   const clearVoteCounts = useCallback(() => {
     setVoteCounts({});
+    setSkipCountsByCategory({}); // Clear skips as well
   }, []);
 
   useEffect(() => {
+    // Total votes casted should only count actual votes for candidates, not skips.
     const total = Object.values(voteCounts).reduce((sum, count) => sum + count, 0);
     setTotalVotesCasted(total);
   }, [voteCounts]);
@@ -74,7 +94,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setRole(null);
     setStudentDetails(null);
-    // Election name, default times, theme, and vote counts persist client-side for the session for now
+    // Election name, default times, theme, vote counts, skip counts, and allowSkipVote persist client-side for the session for now
   };
 
   return (
@@ -85,7 +105,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       defaultSessionStartTime,
       defaultSessionEndTime,
       appTheme,
+      allowSkipVote,
       voteCounts,
+      skipCountsByCategory,
       totalVotesCasted,
       setRole, 
       setStudentDetails, 
@@ -93,6 +115,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setDefaultSessionStartTime,
       setDefaultSessionEndTime,
       setAppTheme,
+      setAllowSkipVote,
       recordVote,
       clearVoteCounts,
       logout 

@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, ArrowLeft, Save } from "lucide-react";
+import { Settings, ArrowLeft, Save, Vote } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAppState } from '@/context/AppStateContext';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch'; // Import Switch
 
 const themeOptions = [
   { name: "Light Blue (Default)", value: "default" },
@@ -36,6 +37,8 @@ export default function AdminSettingsPage() {
     setDefaultSessionEndTime: setGlobalDefaultEndTime,
     appTheme: globalAppTheme,
     setAppTheme: setGlobalAppTheme,
+    allowSkipVote: globalAllowSkipVote, // Get allowSkipVote
+    setAllowSkipVote: setGlobalAllowSkipVote, // Get setter for allowSkipVote
   } = useAppState();
   const { toast } = useToast();
   
@@ -43,25 +46,24 @@ export default function AdminSettingsPage() {
   const [currentDefaultStartTime, setCurrentDefaultStartTime] = useState(globalDefaultStartTime || '09:00');
   const [currentDefaultEndTime, setCurrentDefaultEndTime] = useState(globalDefaultEndTime || '17:00');
   const [currentAppTheme, setCurrentAppTheme] = useState(globalAppTheme || "default");
+  const [currentAllowSkipVote, setCurrentAllowSkipVote] = useState(globalAllowSkipVote); // Local state for switch
 
   useEffect(() => {
     if (globalElectionName) setCurrentElectionName(globalElectionName);
     if (globalDefaultStartTime) setCurrentDefaultStartTime(globalDefaultStartTime);
     if (globalDefaultEndTime) setCurrentDefaultEndTime(globalDefaultEndTime);
     if (globalAppTheme) setCurrentAppTheme(globalAppTheme);
-  }, [globalElectionName, globalDefaultStartTime, globalDefaultEndTime, globalAppTheme]);
+    setCurrentAllowSkipVote(globalAllowSkipVote); // Sync with global state
+  }, [globalElectionName, globalDefaultStartTime, globalDefaultEndTime, globalAppTheme, globalAllowSkipVote]);
 
   useEffect(() => {
     const body = document.body;
-    // Remove all other theme classes
     allThemeClasses.forEach(themeClass => {
       body.classList.remove(themeClass);
     });
-    // Add the new theme class if it's not default
     if (currentAppTheme !== "default") {
       body.classList.add(currentAppTheme);
     }
-    // Persist to global state (primarily for consistency if other components were to read it)
     setGlobalAppTheme(currentAppTheme); 
   }, [currentAppTheme, setGlobalAppTheme]);
 
@@ -69,10 +71,11 @@ export default function AdminSettingsPage() {
     setGlobalElectionName(currentElectionName);
     setGlobalDefaultStartTime(currentDefaultStartTime);
     setGlobalDefaultEndTime(currentDefaultEndTime);
+    setGlobalAllowSkipVote(currentAllowSkipVote); // Save skip vote setting
     // Theme is already set globally via useEffect on currentAppTheme change
     toast({
       title: "Settings Saved",
-      description: "Election name, default session times, and application theme have been updated.",
+      description: "Election name, default session times, theme, and skip vote option have been updated.",
     });
   };
 
@@ -152,6 +155,20 @@ export default function AdminSettingsPage() {
               </select>
               <p className="text-xs text-muted-foreground mt-1">Changes theme immediately. Dark mode is a separate global toggle (not implemented here).</p>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="allowSkipVote" 
+                checked={currentAllowSkipVote}
+                onCheckedChange={setCurrentAllowSkipVote}
+              />
+              <Label htmlFor="allowSkipVote">Allow Skipping Votes</Label>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-4">
+              If enabled, students can choose to skip voting for a category.
+            </p>
+
+
             <Button onClick={handleSaveSettings}>
               <Save className="mr-2 h-4 w-4" />
               Save Settings
@@ -161,18 +178,13 @@ export default function AdminSettingsPage() {
       </Card>
 
       <Alert className="mt-6">
-        <Settings className="h-4 w-4" />
-        <AlertTitle>Additional Settings Placeholder</AlertTitle>
+        <Vote className="h-4 w-4" />
+        <AlertTitle>Voting Experience Settings</AlertTitle>
         <AlertDescription>
-          More settings could be added here in the future, such as:
-          <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-            <li>Email notification configurations.</li>
-            <li>Date formats or timezones.</li>
-          </ul>
+          The "Allow Skipping Votes" option directly impacts how students interact with the voting process.
+          Other settings here can define election-wide parameters.
         </AlertDescription>
       </Alert>
     </div>
   );
 }
-
-    
