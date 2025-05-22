@@ -2,8 +2,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useActionState } from 'react'; // Changed from react-dom and renamed
-import { useFormStatus } from 'react-dom'; // useFormStatus remains in react-dom
+import { useActionState } from 'react'; 
+import { useFormStatus } from 'react-dom'; 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,54 +33,43 @@ export default function StudentVerificationForm() {
   const { toast } = useToast();
   const { setStudentDetails } = useAppState();
 
-  const initialState: VerificationFormState = { message: undefined, errors: undefined, aiResponse: undefined };
-  // Updated to useActionState
+  const initialState: VerificationFormState = { message: undefined, errors: undefined, aiResponse: undefined, validatedData: undefined };
   const [state, formAction] = useActionState(handleStudentVerification, initialState);
 
   useEffect(() => {
-    if (state.message && state.aiResponse) {
-      if (state.aiResponse.isValidStudentId && state.aiResponse.isValidName) {
+    if (state.message && state.aiResponse) { // AI response is present
+      if (state.aiResponse.isValidStudentId && state.aiResponse.isValidName) { // AI says it's valid
         toast({
           title: 'Verification Successful',
-          description: state.message,
+          description: state.message, // "Verification successful. Redirecting to vote..."
           variant: 'default',
         });
-        // Store student details for the voting process
-        // The AI flow's input schema is used, so the server action has access to `validatedFields.data`.
-        // Let's assume the action is updated to put `validatedInput` in `aiResponse` or directly in `state.validatedData`.
-        // For now, we will rely on the action possibly returning this.
-        // A better approach would be to add validatedInput directly to the VerificationFormState in actions.ts.
-        // Current structure of VerificationFormState does not include validatedData, but we can adjust if needed.
-        // Let's try to get it from state if the action is updated to include it.
-
-        // Check if validatedData is part of the state (needs action modification)
-        if ((state as any).validatedData) {
-          const { studentId, name } = (state as any).validatedData;
+        
+        // Student details are passed back in `state.validatedData` on success
+        if (state.validatedData) {
+          const { studentId, name } = state.validatedData;
           setStudentDetails({ studentId, name });
-        } else if (state.aiResponse && state.aiResponse.input?.studentId && state.aiResponse.input?.name) {
-          // Fallback if input is echoed in aiResponse (not standard for current schema)
-           setStudentDetails({ studentId: state.aiResponse.input.studentId, name: state.aiResponse.input.name });
+        } else {
+          // This case should ideally not be hit if action.ts is correctly populating validatedData on success
+          console.warn("Student details for context are missing from the successful verification response.");
         }
-        // else {
-        //   // If neither validatedData nor aiResponse.input is available, we might be missing the data.
-        //   // This part might need refinement in `actions.ts` to ensure `studentId` and `name` are passed back reliably on success.
-        //   console.warn("Student details for context are missing from the verification response.");
-        // }
         router.push(ROUTES.STUDENT_VOTE);
-      } else {
+      } else { // AI says it's invalid
         toast({
           title: 'Verification Issues',
           description: state.aiResponse.feedback || state.message || "Please check the details.",
           variant: 'destructive',
         });
       }
-    } else if (state.message && !state.aiResponse && !state.errors) { // General error from action
+    } else if (state.message && !state.aiResponse && !state.errors) { // General error from action (e.g. caught exception before AI response)
        toast({
           title: 'Error',
           description: state.message,
           variant: 'destructive',
         });
     }
+    // Note: Zod errors (state.errors.studentId / state.errors.name) are handled by inline messages.
+    // Form-level errors (state.errors._form) from AI are handled by the Alert component below.
   }, [state, router, toast, setStudentDetails]);
   
 
@@ -126,16 +115,17 @@ export default function StudentVerificationForm() {
         </Alert>
       )}
 
-      {state.aiResponse && (
-        <Alert variant={state.aiResponse.isValidStudentId && state.aiResponse.isValidName ? "default" : "destructive"} className="mt-4">
-          {state.aiResponse.isValidStudentId && state.aiResponse.isValidName ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+      {state.aiResponse && !(state.aiResponse.isValidStudentId && state.aiResponse.isValidName) && state.aiResponse.feedback && !state.errors?._form && (
+        // This alert shows AI feedback if it's an AI validation failure but not already shown by errors._form
+        // Useful if errors._form is not populated but AI still had feedback on invalid fields.
+        <Alert variant="destructive" className="mt-4">
+          <XCircle className="h-4 w-4" />
           <AlertTitle>AI Validation Feedback</AlertTitle>
           <AlertDescription>
             <p>{state.aiResponse.feedback}</p>
             <ul className="list-disc list-inside mt-2 text-xs">
               <li>Student ID Valid: {state.aiResponse.isValidStudentId ? 'Yes' : 'No'}</li>
               <li>Name Valid: {state.aiResponse.isValidName ? 'Yes' : 'No'}</li>
-              {/* We can ignore category/candidate validation for this step */}
             </ul>
           </AlertDescription>
         </Alert>
@@ -145,3 +135,4 @@ export default function StudentVerificationForm() {
     </form>
   );
 }
+

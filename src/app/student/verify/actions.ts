@@ -17,6 +17,10 @@ export interface VerificationFormState {
     _form?: string[];
   };
   message?: string;
+  validatedData?: {
+    studentId: string;
+    name: string;
+  };
 }
 
 export async function handleStudentVerification(
@@ -51,6 +55,7 @@ export async function handleStudentVerification(
       return {
         aiResponse,
         message: "Verification successful. Redirecting to vote...",
+        validatedData: { studentId, name }
       };
     } else {
       return {
