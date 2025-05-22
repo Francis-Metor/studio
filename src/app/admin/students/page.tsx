@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ClipboardUser, ArrowLeft, Upload } from "lucide-react";
+import { ClipboardList, ArrowLeft, Upload } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -11,7 +11,7 @@ export default function AdminStudentsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold flex items-center">
-          <ClipboardUser className="mr-3 text-primary" size={32} />
+          <ClipboardList className="mr-3 text-primary" size={32} />
           Manage Students
         </h1>
         <Button variant="outline" asChild>

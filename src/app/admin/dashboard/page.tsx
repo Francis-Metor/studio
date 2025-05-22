@@ -1,6 +1,6 @@
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LayoutDashboard, ListTree, UsersRound, ClipboardUser, Timer, Settings } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { LayoutDashboard, ListTree, UsersRound, ClipboardList, Timer, Settings } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
       title: "Manage Students", 
       description: "View student data and eligibility. Supports Excel imports.",
       href: ROUTES.ADMIN_STUDENTS,
-      icon: ClipboardUser
+      icon: ClipboardList
     },
     { 
       title: "Voting Sessions", 
