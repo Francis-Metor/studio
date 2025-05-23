@@ -12,70 +12,70 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ListTree, ArrowLeft, PlusCircle, Edit, Trash2, Save } from "lucide-react";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constants";
-import type { Category } from "@/lib/types";
+import type { VotingCategory as CategoryType } from "@/lib/types"; // Using VotingCategory as the base type
 import { useToast } from "@/hooks/use-toast";
-import initialVotingData from '@/lib/voting-data.json';
+import { useAppState } from '@/context/AppStateContext';
 
-// Helper to generate unique IDs
-const generateId = () => Math.random().toString(36).substr(2, 9);
+const generateId = () => `cat_${Math.random().toString(36).substr(2, 9)}`;
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { 
+    votingCategories, 
+    addCategory, 
+    updateCategoryName, 
+    deleteCategory 
+  } = useAppState();
+  
   const [isMounted, setIsMounted] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
-  const [categoryName, setCategoryName] = useState('');
+  const [currentCategory, setCurrentCategory] = useState<CategoryType | null>(null);
+  const [categoryNameInput, setCategoryNameInput] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    // Initialize categories from voting-data.json (unique category names)
-    // In a real app, this would come from a database.
-    const initialCategories = initialVotingData.map(cat => ({ id: cat.id, name: cat.name }));
-    setCategories(initialCategories);
     setIsMounted(true);
   }, []);
 
   const handleAddCategory = () => {
     setCurrentCategory(null);
-    setCategoryName('');
+    setCategoryNameInput('');
     setIsFormOpen(true);
   };
 
-  const handleEditCategory = (category: Category) => {
+  const handleEditCategory = (category: CategoryType) => {
     setCurrentCategory(category);
-    setCategoryName(category.name);
+    setCategoryNameInput(category.name);
     setIsFormOpen(true);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    setCategories(categories.filter(cat => cat.id !== categoryId));
-    toast({ title: "Category Deleted", description: "The category has been removed." });
+  const handleDeleteCategoryConfirmed = (categoryId: string) => {
+    deleteCategory(categoryId);
+    toast({ title: "Category Deleted", description: "The category and its associated candidates (from the current view) have been removed." });
   };
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryName.trim()) {
+    if (!categoryNameInput.trim()) {
       toast({ title: "Error", description: "Category name cannot be empty.", variant: "destructive" });
       return;
     }
 
     if (currentCategory) {
       // Edit mode
-      setCategories(categories.map(cat => cat.id === currentCategory.id ? { ...cat, name: categoryName.trim() } : cat));
+      updateCategoryName(currentCategory.id, categoryNameInput.trim());
       toast({ title: "Category Updated", description: "The category has been successfully updated." });
     } else {
       // Add mode
-      const newCategory: Category = { id: generateId(), name: categoryName.trim() };
-      setCategories([...categories, newCategory]);
+      const newCategory = { id: generateId(), name: categoryNameInput.trim() }; // candidates array will be empty
+      addCategory(newCategory);
       toast({ title: "Category Added", description: "The new category has been successfully added." });
     }
     setIsFormOpen(false);
-    setCategoryName('');
+    setCategoryNameInput('');
     setCurrentCategory(null);
   };
   
   if (!isMounted) {
-    // Prevents hydration errors by not rendering table/dialogs until client-side mount
     return (
       <div className="space-y-8">
          <div className="flex items-center justify-between">
@@ -126,11 +126,11 @@ export default function AdminCategoriesPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Categories Overview</CardTitle>
-          <CardDescription>Create, edit, and delete voting categories. These categories will be used to group candidates.</CardDescription>
+          <CardDescription>Create, edit, and delete voting categories. These categories will be used to group candidates. Changes affect the current election setup.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-end mb-4">
-            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <Dialog open={isFormOpen} onOpenChange={(isOpen) => { setIsFormOpen(isOpen); if (!isOpen) { setCategoryNameInput(''); setCurrentCategory(null); } }}>
               <DialogTrigger asChild>
                 <Button onClick={handleAddCategory}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add New Category
@@ -142,13 +142,13 @@ export default function AdminCategoriesPage() {
                 </DialogHeader>
                 <form onSubmit={handleSubmitForm} className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="categoryName" className="text-right">
+                    <Label htmlFor="categoryNameInput" className="text-right">
                       Name
                     </Label>
                     <Input
-                      id="categoryName"
-                      value={categoryName}
-                      onChange={(e) => setCategoryName(e.target.value)}
+                      id="categoryNameInput"
+                      value={categoryNameInput}
+                      onChange={(e) => setCategoryNameInput(e.target.value)}
                       className="col-span-3"
                       placeholder="e.g., President, Secretary"
                       required
@@ -167,26 +167,28 @@ export default function AdminCategoriesPage() {
             </Dialog>
           </div>
 
-          {categories.length > 0 ? (
+          {votingCategories.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Category Name</TableHead>
+                  <TableHead>No. of Candidates</TableHead>
                   <TableHead className="text-right w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories.map((category) => (
+                {votingCategories.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell>{category.candidates.length}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="ghost" size="icon" onClick={() => handleEditCategory(category)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" title="Delete">
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                          <Button variant="ghost" size="icon" title="Delete" disabled={category.candidates.length > 0}>
+                            <Trash2 className={`h-4 w-4 ${category.candidates.length > 0 ? 'text-muted-foreground' : 'text-destructive'}`} />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -194,12 +196,16 @@ export default function AdminCategoriesPage() {
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will permanently delete the category &quot;{category.name}&quot;.
-                              Associated candidates might need to be reassigned (this functionality is not yet implemented).
+                              {category.candidates.length > 0 && " This category still has candidates. Please remove them first."}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteCategory(category.id)} className="bg-destructive hover:bg-destructive/90">
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteCategoryConfirmed(category.id)} 
+                              className="bg-destructive hover:bg-destructive/90"
+                              disabled={category.candidates.length > 0}
+                            >
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>

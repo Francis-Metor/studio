@@ -4,7 +4,7 @@
     "id": "spring_2023_general_election",
     "name": "Spring General Election 2023",
     "endDate": "2023-03-15",
-    "totalVotesCasted": 125,
+    "totalStudentsVoted": 125,
     "totalEligibleStudents": 180,
     "turnoutPercentage": 69.4,
     "voteCounts": {
@@ -40,7 +40,7 @@
     "id": "fall_2023_referendum",
     "name": "Fall Referendum 2023",
     "endDate": "2023-10-20",
-    "totalVotesCasted": 90,
+    "totalStudentsVoted": 90,
     "totalEligibleStudents": 150,
     "turnoutPercentage": 60.0,
     "voteCounts": {

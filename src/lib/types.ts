@@ -8,8 +8,13 @@ export type Candidate = {
 };
 
 // This type represents how candidates are structured within voting-data.json,
-// where categoryId is implicit from the parent VotingCategory.
-export type CandidateInVotingData = Omit<Candidate, 'categoryId'> & { photoUrl?: string; photoHint?: string; };
+// and now also how they are managed in the global state via AppStateContext.
+export type CandidateInVotingData = {
+  id: string;
+  name: string;
+  photoUrl?: string;
+  photoHint?: string;
+};
 
 
 export type VotingCategory = {
@@ -18,7 +23,7 @@ export type VotingCategory = {
   candidates: CandidateInVotingData[];
 };
 
-// Simplified Category type for admin management and dropdowns
+// Simplified Category type for admin management and dropdowns (extracted from VotingCategory)
 export type Category = {
   id: string;
   name: string;
@@ -33,6 +38,7 @@ export type Student = {
   id: string; // Student ID
   name: string;
   status: 'Eligible' | 'Voted' | 'Ineligible';
+  // department?: string; // Optional: if we were to add department data
 };
 
 // Basic Voting Session type for admin management
@@ -45,9 +51,10 @@ export type VotingSession = {
   status: VotingSessionStatus;
 };
 
-// Helper type for displaying candidate with category name in the table
-export interface DisplayCandidate extends Candidate {
-  categoryName?: string;
+// Helper type for displaying candidate with category name in the table (used in AdminCandidatesPage)
+export interface DisplayCandidate extends CandidateInVotingData {
+  categoryId: string; // The ID of the category this candidate belongs to
+  categoryName?: string; // The name of the category
 }
 
 // For archived election results
@@ -65,7 +72,7 @@ export interface ArchivedElection {
   id: string;
   name: string;
   endDate: string;
-  totalVotesCasted: number;
+  totalStudentsVoted: number; // Renamed from totalVotesCasted
   totalEligibleStudents: number;
   turnoutPercentage: number;
   voteCounts: { [candidateId: string]: number };
@@ -76,7 +83,7 @@ export interface ArchivedElection {
 // For displaying stats consistently, whether live or archived
 export interface DisplayedStatistic {
   electionName: string;
-  totalVotesCasted: number;
+  totalStudentsVoted: number; // Renamed from totalVotesCasted
   totalEligibleStudents: number;
   turnoutPercentage: number;
   voteCounts: { [candidateId: string]: number };

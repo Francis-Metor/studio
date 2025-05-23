@@ -15,52 +15,57 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UsersRound, ArrowLeft, PlusCircle, Edit, Trash2, Save, UserCircle2 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
-import type { Candidate, Category as SimpleCategory, VotingCategory, DisplayCandidate } from "@/lib/types"; // Renamed Category to SimpleCategory to avoid conflict
+import type { CandidateInVotingData, VotingCategory, DisplayCandidate, Category as SimpleCategory } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import initialVotingData from '@/lib/voting-data.json';
+import { useAppState } from '@/context/AppStateContext';
 
-// Helper to generate unique IDs
 const generateId = () => `cand_${Math.random().toString(36).substr(2, 9)}`;
 
 export default function AdminCandidatesPage() {
-  const [candidates, setCandidates] = useState<DisplayCandidate[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<SimpleCategory[]>([]);
+  const { 
+    votingCategories, 
+    addCandidateToCategory, 
+    updateCandidateInCategory, 
+    deleteCandidateFromCategory 
+  } = useAppState();
+
+  const [displayCandidates, setDisplayCandidates] = useState<DisplayCandidate[]>([]);
+  const [availableSimpleCategories, setAvailableSimpleCategories] = useState<SimpleCategory[]>([]);
+  
   const [isMounted, setIsMounted] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [currentCandidate, setCurrentCandidate] = useState<Candidate | null>(null);
   
-  // Form state
+  // Form state for Add/Edit Dialog
+  const [currentCandidate, setCurrentCandidate] = useState<DisplayCandidate | null>(null); // Holds candidate being edited
   const [candidateName, setCandidateName] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(''); // For the dropdown
   const [photoUrl, setPhotoUrl] = useState('');
   const [photoHint, setPhotoHint] = useState('');
 
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadedVotingCategories: VotingCategory[] = initialVotingData as VotingCategory[];
-    
-    const categoriesForDropdown: SimpleCategory[] = loadedVotingCategories.map(cat => ({ id: cat.id, name: cat.name }));
-    setAvailableCategories(categoriesForDropdown);
+    setIsMounted(true);
+  }, []);
 
-    const flatCandidates: Candidate[] = [];
-    loadedVotingCategories.forEach(category => {
+  useEffect(() => {
+    // Transform votingCategories from context into displayCandidates and availableSimpleCategories
+    const simpleCategories: SimpleCategory[] = votingCategories.map(cat => ({ id: cat.id, name: cat.name }));
+    setAvailableSimpleCategories(simpleCategories);
+
+    const flatCandidates: DisplayCandidate[] = [];
+    votingCategories.forEach(category => {
       category.candidates.forEach(rawCandidate => {
         flatCandidates.push({
           ...rawCandidate,
-          id: rawCandidate.id || generateId(), // Ensure ID exists
-          categoryId: category.id,
+          categoryId: category.id, // Assign categoryId
+          categoryName: category.name,
         });
       });
     });
-    
-    setCandidates(flatCandidates.map(c => ({
-      ...c,
-      categoryName: categoriesForDropdown.find(cat => cat.id === c.categoryId)?.name || 'N/A'
-    })));
+    setDisplayCandidates(flatCandidates);
+  }, [votingCategories]);
 
-    setIsMounted(true);
-  }, []);
 
   const resetFormFields = () => {
     setCandidateName('');
@@ -70,12 +75,12 @@ export default function AdminCandidatesPage() {
     setCurrentCandidate(null);
   };
 
-  const handleAddCandidate = () => {
+  const handleAddCandidateClick = () => {
     resetFormFields();
     setIsFormOpen(true);
   };
 
-  const handleEditCandidate = (candidate: Candidate) => {
+  const handleEditCandidateClick = (candidate: DisplayCandidate) => {
     setCurrentCandidate(candidate);
     setCandidateName(candidate.name);
     setSelectedCategoryId(candidate.categoryId);
@@ -84,8 +89,8 @@ export default function AdminCandidatesPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteCandidate = (candidateId: string) => {
-    setCandidates(prevCandidates => prevCandidates.filter(cand => cand.id !== candidateId));
+  const handleDeleteCandidateConfirmed = (candidate: DisplayCandidate) => {
+    deleteCandidateFromCategory(candidate.categoryId, candidate.id);
     toast({ title: "Candidate Deleted", description: "The candidate has been removed." });
   };
 
@@ -96,31 +101,23 @@ export default function AdminCandidatesPage() {
       return;
     }
 
-    const categoryName = availableCategories.find(c => c.id === selectedCategoryId)?.name || 'N/A';
-
-    if (currentCandidate) {
-      // Edit mode
-      const updatedCandidate: DisplayCandidate = { 
-        ...currentCandidate, 
-        name: candidateName.trim(), 
-        categoryId: selectedCategoryId,
-        categoryName: categoryName,
+    if (currentCandidate) { // Editing existing candidate
+      const updatedCand: CandidateInVotingData = {
+        id: currentCandidate.id,
+        name: candidateName.trim(),
         photoUrl: photoUrl.trim() || undefined,
         photoHint: photoHint.trim() || undefined,
       };
-      setCandidates(candidates.map(cand => cand.id === currentCandidate.id ? updatedCandidate : cand));
+      updateCandidateInCategory(selectedCategoryId, updatedCand); // Use selectedCategoryId if category can change
       toast({ title: "Candidate Updated", description: "The candidate has been successfully updated." });
-    } else {
-      // Add mode
-      const newCandidate: DisplayCandidate = { 
-        id: generateId(), 
-        name: candidateName.trim(), 
-        categoryId: selectedCategoryId,
-        categoryName: categoryName,
+    } else { // Adding new candidate
+      const newCand: CandidateInVotingData = {
+        id: generateId(),
+        name: candidateName.trim(),
         photoUrl: photoUrl.trim() || undefined,
         photoHint: photoHint.trim() || undefined,
       };
-      setCandidates([...candidates, newCandidate]);
+      addCandidateToCategory(selectedCategoryId, newCand);
       toast({ title: "Candidate Added", description: "The new candidate has been successfully added." });
     }
     setIsFormOpen(false);
@@ -178,13 +175,13 @@ export default function AdminCandidatesPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Candidates Overview</CardTitle>
-          <CardDescription>Add, edit, and manage candidate information, including their photos and associated categories.</CardDescription>
+          <CardDescription>Add, edit, and manage candidate information. Candidates are part of the current election setup.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-end mb-4">
             <Dialog open={isFormOpen} onOpenChange={(isOpen) => { setIsFormOpen(isOpen); if (!isOpen) resetFormFields(); }}>
               <DialogTrigger asChild>
-                <Button onClick={handleAddCandidate}>
+                <Button onClick={handleAddCandidateClick}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add New Candidate
                 </Button>
               </DialogTrigger>
@@ -204,7 +201,8 @@ export default function AdminCandidatesPage() {
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableCategories.map(cat => (
+                        {availableSimpleCategories.length === 0 && <SelectItem value="no-cat" disabled>No categories available</SelectItem>}
+                        {availableSimpleCategories.map(cat => (
                           <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -222,7 +220,7 @@ export default function AdminCandidatesPage() {
                     <DialogClose asChild>
                       <Button type="button" variant="outline">Cancel</Button>
                     </DialogClose>
-                    <Button type="submit">
+                    <Button type="submit" disabled={availableSimpleCategories.length === 0 && !currentCandidate}>
                       <Save className="mr-2 h-4 w-4" /> {currentCandidate ? 'Save Changes' : 'Create Candidate'}
                     </Button>
                   </DialogFooter>
@@ -231,7 +229,7 @@ export default function AdminCandidatesPage() {
             </Dialog>
           </div>
 
-          {candidates.length > 0 ? (
+          {displayCandidates.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -242,8 +240,8 @@ export default function AdminCandidatesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {candidates.map((candidate) => (
-                  <TableRow key={candidate.id}>
+                {displayCandidates.map((candidate) => (
+                  <TableRow key={`${candidate.categoryId}-${candidate.id}`}>
                     <TableCell>
                       <Avatar className="h-12 w-12 rounded-md">
                         <AvatarImage src={candidate.photoUrl || `https://placehold.co/96x96.png?text=${candidate.name.charAt(0)}`} alt={candidate.name} data-ai-hint={candidate.photoHint || "person"} />
@@ -253,7 +251,7 @@ export default function AdminCandidatesPage() {
                     <TableCell className="font-medium">{candidate.name}</TableCell>
                     <TableCell>{candidate.categoryName}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditCandidate(candidate)} title="Edit">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditCandidateClick(candidate)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
@@ -271,7 +269,7 @@ export default function AdminCandidatesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteCandidate(candidate.id)} className="bg-destructive hover:bg-destructive/90">
+                            <AlertDialogAction onClick={() => handleDeleteCandidateConfirmed(candidate)} className="bg-destructive hover:bg-destructive/90">
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -283,7 +281,7 @@ export default function AdminCandidatesPage() {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-muted-foreground text-center py-4">No candidates found. Add one to get started.</p>
+            <p className="text-muted-foreground text-center py-4">No candidates found. Add categories and then candidates.</p>
           )}
         </CardContent>
       </Card>

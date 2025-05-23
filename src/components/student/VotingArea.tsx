@@ -10,24 +10,31 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, Send, UserCircle2, Loader2, SkipForward } from 'lucide-react'; // Added SkipForward
+import { ArrowLeft, ArrowRight, Check, Send, UserCircle2, Loader2, SkipForward } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import votingCategoriesData from '@/lib/voting-data.json';
-import type { VoteSelection, VotingCategory, Candidate } from '@/lib/types';
+// No longer directly import votingCategoriesData here, will get from context
+import type { VoteSelection, VotingCategory, CandidateInVotingData as Candidate } from '@/lib/types'; // CandidateInVotingData is used in VotingCategory
 import { ROUTES } from '@/lib/constants';
 import { useAppState } from '@/context/AppStateContext';
 
 export default function VotingArea() {
   const router = useRouter();
   const { toast } = useToast();
-  const { studentDetails, logout, recordVote, allowSkipVote } = useAppState();
+  const { 
+    studentDetails, 
+    logout, 
+    recordVote, 
+    allowSkipVote,
+    votingCategories // Get categories from global state
+  } = useAppState();
 
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selections, setSelections] = useState<VoteSelection>({});
   const [isConfirming, setIsConfirming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const categories: VotingCategory[] = votingCategoriesData as VotingCategory[];
+  // Categories are now from context
+  const categories: VotingCategory[] = votingCategories;
 
   useEffect(() => {
     if (!studentDetails?.studentId) {
@@ -46,7 +53,6 @@ export default function VotingArea() {
   const handleSkipCategory = () => {
     if (!currentCategory) return;
     setSelections(prev => ({ ...prev, [currentCategory.id]: 'skipped' }));
-    // Automatically move to next or confirm
     if (currentCategoryIndex < totalCategories - 1) {
       setCurrentCategoryIndex(prev => prev + 1);
     } else {
@@ -62,7 +68,6 @@ export default function VotingArea() {
       toast({ title: "Selection Required", description: `Please select a candidate for ${currentCategory.name}.`, variant: "destructive" });
       return;
     }
-    // If skipping is allowed and no candidate is selected, implicitly mark as skipped before proceeding
     if (allowSkipVote && !currentSelection) {
       setSelections(prev => ({ ...prev, [currentCategory.id]: 'skipped' }));
     }
@@ -87,8 +92,6 @@ export default function VotingArea() {
   const handleSubmitVotes = () => {
     setIsLoading(true);
     
-    // Ensure all categories have a selection or are marked 'skipped' if skipping was allowed.
-    // This is more of a double-check, primary logic is in handleNext/handleSkip.
     const finalSelections = { ...selections };
     if (allowSkipVote) {
       categories.forEach(cat => {
@@ -114,12 +117,22 @@ export default function VotingArea() {
     }, 1500);
   };
 
-  const progressPercentage = ((currentCategoryIndex + 1) / totalCategories) * 100;
+  const progressPercentage = totalCategories > 0 ? ((currentCategoryIndex + 1) / totalCategories) * 100 : 0;
 
   if (!studentDetails?.studentId) {
     return <p className="text-center text-destructive">Redirecting to verification...</p>;
   }
   
+  if (categories.length === 0 && !isLoading) {
+     return (
+      <Alert variant="default">
+        <AlertTitle>No Categories</AlertTitle>
+        <AlertDescription>There are currently no voting categories defined for this election. Please contact an administrator.</AlertDescription>
+        <Button onClick={() => { logout(); router.push(ROUTES.LOGIN); }} className="mt-4">Back to Login</Button>
+      </Alert>
+    );
+  }
+
   if (isConfirming) {
     return (
       <div className="space-y-6">
@@ -130,7 +143,7 @@ export default function VotingArea() {
         <CardContent className="space-y-4">
           {categories.map(category => {
             const selectedValue = selections[category.id];
-            let displayText = 'No selection';
+            let displayText: React.ReactNode = 'No selection';
             if (selectedValue === 'skipped') {
               displayText = <span className="text-muted-foreground italic">Skipped</span>;
             } else if (selectedValue) {
@@ -159,7 +172,8 @@ export default function VotingArea() {
   }
 
   if (!currentCategory) {
-    return <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>No voting categories found or error in loading.</AlertDescription></Alert>;
+    // This might happen if categories array is empty after initial checks
+    return <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>No voting categories available or error in loading.</AlertDescription></Alert>;
   }
   
   const isNextButtonDisabled = isLoading || (!selections[currentCategory.id] && !allowSkipVote);
@@ -180,40 +194,44 @@ export default function VotingArea() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup
-            value={selections[currentCategory.id] === 'skipped' ? '' : selections[currentCategory.id] || ''}
-            onValueChange={(candidateId) => handleSelectCandidate(currentCategory.id, candidateId)}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {currentCategory.candidates.map((candidate: Candidate) => (
-              <Label
-                key={candidate.id}
-                htmlFor={`${currentCategory.id}-${candidate.id}`}
-                className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-primary transition-all relative
-                  ${selections[currentCategory.id] === candidate.id ? 'border-primary bg-primary/10 shadow-md' : 'border-muted hover:bg-accent/10'}`}
-              >
-                <RadioGroupItem value={candidate.id} id={`${currentCategory.id}-${candidate.id}`} className="sr-only" />
-                <div className="relative w-24 h-24 rounded-full overflow-hidden mb-3 border-2 border-muted">
-                  {candidate.photoUrl ? (
-                    <Image
-                      src={candidate.photoUrl}
-                      alt={candidate.name}
-                      width={96}
-                      height={96}
-                      className="object-cover"
-                      data-ai-hint={candidate.photoHint || "person"}
-                    />
-                  ) : (
-                    <UserCircle2 className="w-full h-full text-muted-foreground" />
+          {currentCategory.candidates.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No candidates available for this category.</p>
+          ) : (
+            <RadioGroup
+              value={selections[currentCategory.id] === 'skipped' ? '' : selections[currentCategory.id] || ''}
+              onValueChange={(candidateId) => handleSelectCandidate(currentCategory.id, candidateId)}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              {currentCategory.candidates.map((candidate: Candidate) => (
+                <Label
+                  key={candidate.id}
+                  htmlFor={`${currentCategory.id}-${candidate.id}`}
+                  className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-primary transition-all relative
+                    ${selections[currentCategory.id] === candidate.id ? 'border-primary bg-primary/10 shadow-md' : 'border-muted hover:bg-accent/10'}`}
+                >
+                  <RadioGroupItem value={candidate.id} id={`${currentCategory.id}-${candidate.id}`} className="sr-only" />
+                  <div className="relative w-24 h-24 rounded-full overflow-hidden mb-3 border-2 border-muted">
+                    {candidate.photoUrl ? (
+                      <Image
+                        src={candidate.photoUrl}
+                        alt={candidate.name}
+                        width={96}
+                        height={96}
+                        className="object-cover"
+                        data-ai-hint={candidate.photoHint || "person"}
+                      />
+                    ) : (
+                      <UserCircle2 className="w-full h-full text-muted-foreground" />
+                    )}
+                  </div>
+                  <span className="font-semibold text-center">{candidate.name}</span>
+                  {selections[currentCategory.id] === candidate.id && (
+                     <Check className="w-5 h-5 text-primary absolute top-2 right-2" />
                   )}
-                </div>
-                <span className="font-semibold text-center">{candidate.name}</span>
-                {selections[currentCategory.id] === candidate.id && (
-                   <Check className="w-5 h-5 text-primary absolute top-2 right-2" />
-                )}
-              </Label>
-            ))}
-          </RadioGroup>
+                </Label>
+              ))}
+            </RadioGroup>
+          )}
            {selections[currentCategory.id] === 'skipped' && (
             <p className="text-center text-sm text-muted-foreground mt-4 italic">You have chosen to skip this category.</p>
           )}
@@ -225,12 +243,16 @@ export default function VotingArea() {
           <ArrowLeft className="mr-2 h-4 w-4" /> Previous
         </Button>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          {allowSkipVote && selections[currentCategory.id] !== 'skipped' && (
+          {allowSkipVote && selections[currentCategory.id] !== 'skipped' && currentCategory.candidates.length > 0 && (
             <Button variant="secondary" onClick={handleSkipCategory} disabled={isLoading} className="w-full sm:w-auto">
               <SkipForward className="mr-2 h-4 w-4" /> Skip Category
             </Button>
           )}
-          <Button onClick={handleNext} disabled={isNextButtonDisabled} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button 
+            onClick={handleNext} 
+            disabled={isNextButtonDisabled && currentCategory.candidates.length > 0} 
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
             {currentCategoryIndex === totalCategories - 1 ? 'Review Votes' : 'Next'}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
